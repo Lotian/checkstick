@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: xi-qian-draw-server
+  datasource:
+    # 不提供默认值：漏配环境变量时启动直接失败，避免误连到别的数据库。
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+  flyway:
+    enabled: true
+    # 线上库是早期用 SQL 手工建起来的、没有 flyway_schema_history（数据库结构已存在但
+    # 记录为空），因此开启基线：Flyway 只在"结构非空且没有历史表"时创建一条基线记录，
+    # 随后正常执行后续迁移。V3 已写成幂等形式，所以无论 V3 是否曾被人工执行过都不会冲突。
+    # 全新空库不触发基线，会按 V1、V2、V3… 顺序完整迁移。
+    baseline-on-migrate: true
+    baseline-version: 2
+  mvc:
+    async:
+      # 管理端 SSE 长连接的异步超时，需小于反向代理的 proxy_read_timeout。
+      request-timeout: 30m
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        # 部署在 HTTPS 之后必须设置为 true，否则浏览器不会回传会话 Cookie。
+        secure: ${APP_COOKIE_SECURE:false}
+        same-site: strict
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  admin:
+    # 必须通过环境变量提供，未配置时启动失败。
+    username: ${ADMIN_USERNAME}
+    password: ${ADMIN_PASSWORD}
+  # 玩家端 H5 地址（用于后台二维码）。留空表示玩家端与后台同源。
+  public-base-url: ${PUBLIC_BASE_URL:}
+
+logging:
+  level:
+    root: INFO
+    com.xiqian: INFO
+    # 现场部署默认不开 SQL 明细；需要排查时用环境变量临时打开：
+    #   LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG
+    #   LOGGING_LEVEL_ORG_HIBERNATE_ORM_JDBC_BIND=TRACE
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: INFO

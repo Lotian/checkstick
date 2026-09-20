@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: 囍签扫码抽签 API
+  version: 1.0.0
+servers:
+  - url: /api
+paths:
+  /public/groups/{code}/state:
+    get:
+      summary: 查询当前轮次以及游客已有抽签结果
+      parameters:
+        - $ref: '#/components/parameters/GroupCode'
+        - $ref: '#/components/parameters/VisitorId'
+      responses:
+        '200':
+          description: 当前组局状态
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicGroupState' }
+  /public/groups/{code}/draw:
+    post:
+      summary: 幂等抽取身份卡
+      parameters:
+        - $ref: '#/components/parameters/GroupCode'
+        - $ref: '#/components/parameters/VisitorId'
+      responses:
+        '200':
+          description: 抽签结果；重复请求返回原结果
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DrawResult' }
+        '409': { description: 未开轮或本轮满员 }
+  /admin/auth/login:
+    post:
+      summary: 管理员登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        '200': { description: 登录成功 }
+        '401': { description: 账号或密码错误 }
+  /admin/auth/csrf:
+    get:
+      summary: 获取管理端 CSRF 令牌
+      responses:
+        '200': { description: 安全令牌及请求头名称 }
+  /admin/app-config:
+    get:
+      summary: 获取后台运行时配置（玩家端地址，用于生成固定二维码）
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: playerBaseUrl 为空串表示玩家端与后台同源
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playerBaseUrl: { type: string }
+  /admin/groups:
+    get:
+      summary: 查询全部组局
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: 组局列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GameGroup' }
+    post:
+      summary: 新建组局
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 80 }
+                minPlayers: { type: integer, minimum: 2, maximum: 20, default: 5 }
+                maxPlayers: { type: integer, minimum: 2, maximum: 20, default: 8 }
+      responses:
+        '200':
+          description: 新组局
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GameGroup' }
+  /admin/groups/{id}:
+    patch:
+      summary: 修改组局名称、启用状态或人数区间
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 80 }
+                enabled: { type: boolean }
+                minPlayers: { type: integer, minimum: 2, maximum: 20 }
+                maxPlayers: { type: integer, minimum: 2, maximum: 20 }
+      responses:
+        '200':
+          description: 更新后的组局
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GameGroup' }
+  /admin/groups/{id}/rounds:
+    get:
+      summary: 查询组局历史轮次
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: 历史轮次列表 }
+    post:
+      summary: 关闭旧轮并按组局的人数区间开启新轮
+      description: |
+        签位数量 = 组局的 maxPlayers；抽满 minPlayers 后可以提前封签，
+        抽满 maxPlayers 自动封签。人数区间在开轮时快照到轮次上。
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: 新轮次详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoundDetail' }
+  /admin/rounds/{id}:
+    get:
+      summary: 查询轮次进度和已抽身份
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: 轮次详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoundDetail' }
+  /admin/rounds/{id}/close:
+    post:
+      summary: 提前封签（不再等满最高人数，剩余签位作废）
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: 封签后的轮次详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoundDetail' }
+        '409': { description: 未达最低人数或本轮已封签 }
+  /admin/rounds/{id}/events:
+    get:
+      summary: 订阅轮次实时进度
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Server-Sent Events
+          content:
+            text/event-stream: {}
+  /admin/rounds/{id}/export.csv:
+    get:
+      summary: 导出轮次抽签结果
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: UTF-8 BOM CSV 文件
+          content:
+            text/csv: {}
+  /admin/role-templates:
+    get:
+      summary: 查询全部身份模板
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200': { description: 身份模板列表 }
+    put:
+      summary: 批量更新身份任务和奖励
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200': { description: 更新后的模板列表 }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+  parameters:
+    GroupCode:
+      name: code
+      in: path
+      required: true
+      schema: { type: string, minLength: 4, maxLength: 4, pattern: '^[0-9]{4}$' }
+    VisitorId:
+      name: X-Visitor-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    RoundStatus:
+      type: string
+      enum: [ACTIVE, FULL, CLOSED]
+    RoleType:
+      type: string
+      enum: [GROOM, BRIDE, VILLAGER]
+    DrawResult:
+      type: object
+      required: [roundId, roleType, roleName, taskText, rewardText, drawnAt]
+      properties:
+        roundId: { type: string, format: uuid }
+        roleType: { $ref: '#/components/schemas/RoleType' }
+        roleName: { type: string }
+        taskText: { type: string }
+        rewardText: { type: string }
+        drawnAt: { type: string, format: date-time }
+    PublicGroupState:
+      type: object
+      properties:
+        groupId: { type: string, format: uuid }
+        groupName: { type: string }
+        groupCode: { type: string }
+        roundId: { type: string, format: uuid, nullable: true }
+        roundNumber: { type: integer, nullable: true }
+        minPlayers: { type: integer, nullable: true }
+        maxPlayers: { type: integer, nullable: true }
+        roundStatus: { allOf: [{ $ref: '#/components/schemas/RoundStatus' }], nullable: true }
+        drawnCount: { type: integer }
+        remainingCount: { type: integer }
+        result: { allOf: [{ $ref: '#/components/schemas/DrawResult' }], nullable: true }
+    GameGroup:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        code: { type: string, description: 4 位数字组局码 }
+        enabled: { type: boolean }
+        minPlayers: { type: integer }
+        maxPlayers: { type: integer }
+        createdAt: { type: string, format: date-time }
+        currentRound: { type: object, nullable: true }
+    RoundDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        groupId: { type: string, format: uuid }
+        groupName: { type: string }
+        roundNumber: { type: integer }
+        minPlayers: { type: integer }
+        maxPlayers: { type: integer }
+        status: { $ref: '#/components/schemas/RoundStatus' }
+        drawnCount: { type: integer }
+        remainingCount: { type: integer }
+        startedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time, nullable: true }
+        canCloseEarly: { type: boolean, description: 已抽满最低人数，可以提前封签 }
+        draws:
+          type: array
+          items: { type: object }
+

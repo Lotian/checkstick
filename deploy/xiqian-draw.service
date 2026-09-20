@@ -1,0 +1,37 @@
+[Unit]
+Description=Xiqian Draw Server (囍签抽签后端)
+Documentation=file:/opt/xiqian/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+# 首次发布包还没铺开时，不要让 Restart=always 每 5 秒失败一次刷日志
+ConditionPathExists=/opt/xiqian/current/draw-server.jar
+
+[Service]
+Type=simple
+User=xiqian
+Group=xiqian
+
+# current 是指向 releases/<时间戳> 的软链接，由 server-release.sh 原子切换
+WorkingDirectory=/opt/xiqian/current
+EnvironmentFile=/etc/xiqian/draw.env
+
+# 只监听回环地址：公网入口一律走 nginx，8080 不要对公网暴露
+ExecStart=/usr/bin/java -Xms256m -Xmx512m -jar /opt/xiqian/current/draw-server.jar --server.address=127.0.0.1
+
+# Spring Boot 收到 SIGTERM 正常退出时的返回码
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+
+# SSE 长连接 + 现场并发，放宽文件描述符上限
+LimitNOFILE=65535
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xiqian-draw
+
+[Install]
+WantedBy=multi-user.target
