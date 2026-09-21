@@ -17,6 +17,7 @@ public class RoundProgressListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onDrawCompleted(DrawCompletedEvent event) {
+        // 必须等事务提交后再查询和推送，避免管理端看到最终回滚的“幽灵进度”。
         sseHub.broadcast(event.roundId(), roundService.get(event.roundId()));
     }
 }

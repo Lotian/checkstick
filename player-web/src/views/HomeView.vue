@@ -86,6 +86,13 @@ onMounted(() => {
         <button class="ink-button" type="button" @click="store.join(store.groupCode)">查看新轮</button>
       </section>
 
+      <section v-else-if="store.state.roundStatus === 'CLOSED'" class="waiting-panel panel-enter">
+        <span class="waiting-glyph">封</span>
+        <h2>本轮已封签</h2>
+        <p>本轮已经结束，请等待工作人员开启下一轮。</p>
+        <button class="ink-button" type="button" @click="store.join(store.groupCode)">查看新轮</button>
+      </section>
+
       <FortuneTube
         v-else
         :drawing="store.drawing"

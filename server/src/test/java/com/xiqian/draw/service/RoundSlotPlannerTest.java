@@ -59,5 +59,8 @@ class RoundSlotPlannerTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> RoundSlotPlanner.plan(6, 5, random))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RoundSlotPlanner.plan(5, 8, null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("随机数生成器不能为空");
     }
 }

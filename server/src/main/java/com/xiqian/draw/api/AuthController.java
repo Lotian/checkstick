@@ -33,6 +33,7 @@ public class AuthController {
     public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest request,
                                        HttpServletRequest servletRequest,
                                        HttpServletResponse servletResponse) {
+        // 项目关闭了表单登录，因此在 JSON 接口中显式完成认证并保存到 HTTP Session。
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
         var context = SecurityContextHolder.createEmptyContext();
@@ -49,6 +50,7 @@ public class AuthController {
 
     @GetMapping("/csrf")
     public AuthDtos.CsrfResponse csrf(CsrfToken token) {
+        // 返回 Spring 生成的掩码令牌；前端不能直接把 Cookie 中的原始值当作请求头。
         return new AuthDtos.CsrfResponse(token.getToken(), token.getHeaderName());
     }
 }

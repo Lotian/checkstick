@@ -5,6 +5,7 @@ import com.xiqian.draw.domain.RoleType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -29,6 +30,7 @@ public final class RoundSlotPlanner {
         if (maxPlayers < minPlayers) {
             throw new IllegalArgumentException("最高人数不能小于最低人数");
         }
+        Objects.requireNonNull(random, "随机数生成器不能为空");
 
         List<RoleType> roles = new ArrayList<>(maxPlayers);
         roles.add(RoleType.GROOM);

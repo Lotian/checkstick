@@ -59,16 +59,42 @@ public class DrawSlot {
         if (this.visitorId != null) {
             throw new IllegalStateException("该签位已经被领取");
         }
+        if (visitorId == null || visitorId.isBlank()) {
+            throw new IllegalArgumentException("游客标识不能为空");
+        }
         this.visitorId = visitorId;
         this.drawnAt = OffsetDateTime.now();
     }
 
-    public UUID getId() { return id; }
-    public GameRound getRound() { return round; }
-    public int getSlotIndex() { return slotIndex; }
-    public RoleType getRoleType() { return roleType; }
-    public String getTaskText() { return taskText; }
-    public String getRewardText() { return rewardText; }
-    public String getVisitorId() { return visitorId; }
-    public OffsetDateTime getDrawnAt() { return drawnAt; }
+    public UUID getId() {
+        return id;
+    }
+
+    public GameRound getRound() {
+        return round;
+    }
+
+    public int getSlotIndex() {
+        return slotIndex;
+    }
+
+    public RoleType getRoleType() {
+        return roleType;
+    }
+
+    public String getTaskText() {
+        return taskText;
+    }
+
+    public String getRewardText() {
+        return rewardText;
+    }
+
+    public String getVisitorId() {
+        return visitorId;
+    }
+
+    public OffsetDateTime getDrawnAt() {
+        return drawnAt;
+    }
 }

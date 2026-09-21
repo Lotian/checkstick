@@ -31,7 +31,10 @@ public final class TemplateDtos {
     }
 
     public record UpdateTemplatesRequest(
-            @NotNull @Valid List<TemplateUpdateItem> templates
+            @NotNull
+            @Size(min = 1, max = 3, message = "每次请提交1至3个身份模板")
+            @Valid
+            List<TemplateUpdateItem> templates
     ) {
     }
 }

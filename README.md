@@ -18,15 +18,18 @@
 
 ```powershell
 $env:JAVA_HOME='F:\softwareWork\java21'
-$env:MAVEN_USER_HOME='E:\Develop\maven_repos'
 $env:DATABASE_URL='jdbc:postgresql://localhost:5432/xiqian'
 $env:DATABASE_USERNAME='xiqian'
 $env:DATABASE_PASSWORD='请替换'
 $env:ADMIN_USERNAME='admin'
 $env:ADMIN_PASSWORD='请替换'
 cd server
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd "-Dmaven.repo.local=E:\Develop\maven_repos" spring-boot:run
 ```
+
+项目通过 Maven Wrapper 固定 Maven 版本。依赖仓库位置不要写入 `.mvn/maven.config`：
+该文件会被 Maven 按“每行一个命令参数”解析，注释和机器专属绝对路径都会导致其他环境构建失败；
+需要自定义仓库时请像上例一样通过 `-Dmaven.repo.local` 显式传入。
 
 表结构由 Flyway 在首次启动时自动迁移（`V1__init_schema.sql` 建表、`V2__seed_role_templates.sql` 灌入身份模板）。
 

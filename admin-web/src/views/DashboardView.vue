@@ -11,14 +11,19 @@ import type { GameGroup, PlayerRange, RoleTemplate, RoundDetail, RoundListItem }
 const MIN_PLAYERS_LIMIT = 2
 const MAX_PLAYERS_LIMIT = 20
 
+// 页面级依赖与核心业务数据
 const auth = useAuthStore()
 const router = useRouter()
 const groups = ref<GameGroup[]>([])
 const selectedGroupId = ref('')
 const round = ref<RoundDetail | null>(null)
+
+// 异步操作状态：分别控制按钮，避免一个操作阻塞整张控制台。
 const loading = ref(false)
 const starting = ref(false)
 const closing = ref(false)
+
+// 弹层与表单状态
 const createVisible = ref(false)
 const templateVisible = ref(false)
 const historyVisible = ref(false)
@@ -29,6 +34,7 @@ const rangeForm = reactive({ minPlayers: 5, maxPlayers: 8 })
 const templates = ref<RoleTemplate[]>([])
 const history = ref<RoundListItem[]>([])
 let eventSource: EventSource | null = null
+let selectionSequence = 0
 
 const selectedGroup = computed(() => groups.value.find((group) => group.id === selectedGroupId.value) ?? null)
 const progress = computed(() => {
@@ -48,11 +54,14 @@ function sizeLabel(range: PlayerRange | null | undefined) {
 
 function formatTime(value?: string | null) {
   if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
   return new Intl.DateTimeFormat('zh-CN', {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-  }).format(new Date(value))
+  }).format(date)
 }
 
+/** 刷新组局列表，并尽量保留当前选择。 */
 async function loadGroups(keepSelection = true) {
   loading.value = true
   try {
@@ -69,34 +78,63 @@ async function loadGroups(keepSelection = true) {
 }
 
 async function selectGroup(groupId: string) {
+  const currentSequence = ++selectionSequence
   selectedGroupId.value = groupId
   round.value = null
   closeEvents()
+
   const group = groups.value.find((item) => item.id === groupId)
   if (!group?.currentRound) return
-  await loadRound(group.currentRound.id)
-  connectEvents(group.currentRound.id)
+
+  try {
+    const data = await fetchRound(group.currentRound.id)
+    // 用户可能在请求返回前切换了多次组局；过期响应不得覆盖最新选择。
+    if (currentSequence !== selectionSequence || selectedGroupId.value !== groupId) return
+    round.value = data
+    connectEvents(group.currentRound.id)
+  } catch (error) {
+    if (currentSequence === selectionSequence) ElMessage.error(errorMessage(error))
+  }
 }
 
-async function loadRound(roundId: string) {
+async function fetchRound(roundId: string) {
   const { data } = await api.get<RoundDetail>(`/admin/rounds/${roundId}`)
-  round.value = data
+  return data
 }
 
+/** 建立当前轮次的进度流；闭包中的 source 用于识别已被替换的旧连接。 */
 function connectEvents(roundId: string) {
   closeEvents()
-  eventSource = new EventSource(`/api/admin/rounds/${roundId}/events`, { withCredentials: true })
-  eventSource.addEventListener('progress', (event) => {
-    round.value = JSON.parse((event as MessageEvent).data) as RoundDetail
+  const source = new EventSource(`/api/admin/rounds/${roundId}/events`, { withCredentials: true })
+  eventSource = source
+
+  source.addEventListener('progress', (event) => {
+    if (eventSource !== source) return
+
+    let nextRound: RoundDetail
+    try {
+      nextRound = JSON.parse((event as MessageEvent).data) as RoundDetail
+    } catch {
+      // 单条损坏消息交给下一次 SSE 事件或错误快照恢复，不中断整个页面。
+      return
+    }
+    if (nextRound.id !== roundId) return
+
+    round.value = nextRound
     const group = groups.value.find((item) => item.id === selectedGroupId.value)
     if (group?.currentRound && round.value) {
       group.currentRound.drawnCount = round.value.drawnCount
       group.currentRound.status = round.value.status
     }
   })
-  eventSource.onerror = () => {
+  source.onerror = async () => {
     // EventSource 自带重连，这里只补一次快照避免进度停留在旧值。
-    loadRound(roundId).catch(() => undefined)
+    try {
+      const latest = await fetchRound(roundId)
+      if (eventSource === source) round.value = latest
+    } catch {
+      // 重连期间保持最后一份可用快照，避免瞬时网络波动清空现场数据。
+    }
   }
 }
 
@@ -252,9 +290,16 @@ async function openHistory() {
 }
 
 async function viewHistory(item: RoundListItem) {
-  await loadRound(item.id)
-  historyVisible.value = false
-  if (item.status !== 'CLOSED') connectEvents(item.id)
+  try {
+    // 历史详情不是当前组局选择流程的一部分，先关闭旧流再加载指定轮次。
+    selectionSequence += 1
+    closeEvents()
+    round.value = await fetchRound(item.id)
+    historyVisible.value = false
+    if (item.status !== 'CLOSED') connectEvents(item.id)
+  } catch (error) {
+    ElMessage.error(errorMessage(error))
+  }
 }
 
 function exportCsv() {

@@ -15,6 +15,11 @@ import java.util.UUID;
 @Service
 public class GroupService {
 
+    /**
+     * 数据库对组局码有唯一约束；这里先做有限次数的应用层避碰，
+     * 防止码位接近耗尽时请求无限循环。
+     */
+    private static final int MAX_CODE_GENERATION_ATTEMPTS = 20;
     private static final List<RoundStatus> CURRENT_STATUSES = List.of(RoundStatus.ACTIVE, RoundStatus.FULL);
 
     private final GameGroupRepository groupRepository;
@@ -34,9 +39,12 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public List<GroupDtos.GroupResponse> list() {
-        return groupRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toResponse).toList();
+        return groupRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
+    /** 创建组局；未传人数时使用领域默认值，并生成现场使用的四位数字码。 */
     @Transactional
     public GroupDtos.GroupResponse create(GroupDtos.CreateGroupRequest request) {
         int minPlayers = request.minPlayers() == null
@@ -55,6 +63,11 @@ public class GroupService {
     public GroupDtos.GroupResponse update(UUID id, GroupDtos.UpdateGroupRequest request) {
         GameGroup group = groupRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("组局不存在"));
+
+        // PATCH 允许不传 name，但明确传入空白名称通常是表单错误，不能静默忽略。
+        if (request.name() != null && request.name().isBlank()) {
+            throw new BadRequestException("组局名称不能为空");
+        }
 
         // 只校验改动后的最终区间：允许只改其中一个值时与现有值组合
         int minPlayers = request.minPlayers() == null ? group.getMinPlayers() : request.minPlayers();
@@ -79,7 +92,7 @@ public class GroupService {
     }
 
     private String uniqueCode() {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < MAX_CODE_GENERATION_ATTEMPTS; i++) {
             String code = codeGenerator.nextCode();
             if (!groupRepository.existsByCode(code)) {
                 return code;

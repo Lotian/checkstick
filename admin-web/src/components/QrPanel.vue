@@ -7,6 +7,7 @@ import { resolvePlayerBaseUrl } from '@/utils/playerUrl'
 
 const qrDataUrl = ref('')
 const publicUrl = ref(resolvePlayerBaseUrl('', window.location.origin))
+const qrError = ref('')
 
 async function loadPlayerBaseUrl() {
   try {
@@ -19,12 +20,17 @@ async function loadPlayerBaseUrl() {
 
 onMounted(async () => {
   await loadPlayerBaseUrl()
-  qrDataUrl.value = await QRCode.toDataURL(publicUrl.value, {
-    width: 420,
-    margin: 2,
-    color: { dark: '#2c0d0f', light: '#ead9b7' },
-    errorCorrectionLevel: 'M',
-  })
+  try {
+    qrDataUrl.value = await QRCode.toDataURL(publicUrl.value, {
+      width: 420,
+      margin: 2,
+      color: { dark: '#2c0d0f', light: '#ead9b7' },
+      errorCorrectionLevel: 'M',
+    })
+  } catch {
+    // 地址仍保留在页面上，二维码库异常时工作人员可以让玩家手动访问。
+    qrError.value = '二维码生成失败，请使用上方地址进入玩家端'
+  }
 })
 
 function printQr() {
@@ -42,5 +48,6 @@ function printQr() {
       <el-button plain @click="printQr">打印二维码</el-button>
     </div>
     <img v-if="qrDataUrl" :src="qrDataUrl" alt="玩家端固定二维码" />
+    <p v-else-if="qrError" class="qr-error" role="alert">{{ qrError }}</p>
   </section>
 </template>

@@ -17,6 +17,7 @@ public class SseHub {
     private static final long TIMEOUT_MILLIS = 30 * 60 * 1000L;
     private final Map<UUID, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
+    /** 为指定轮次注册长连接；三种结束路径都必须清理集合，避免长期活动中积累失效连接。 */
     public SseEmitter subscribe(UUID roundId) {
         SseEmitter emitter = new SseEmitter(TIMEOUT_MILLIS);
         emitters.computeIfAbsent(roundId, ignored -> new CopyOnWriteArraySet<>()).add(emitter);
@@ -25,18 +26,20 @@ public class SseHub {
         emitter.onError(error -> remove(roundId, emitter));
         try {
             emitter.send(SseEmitter.event().name("connected").data(Map.of("roundId", roundId)));
-        } catch (IOException exception) {
+        } catch (IOException | IllegalStateException exception) {
             remove(roundId, emitter);
+            emitter.completeWithError(exception);
         }
         return emitter;
     }
 
+    /** 向某轮的全部管理端页面推送最新快照；单个连接失败不会影响其他订阅者。 */
     public void broadcast(UUID roundId, Object payload) {
         Set<SseEmitter> roundEmitters = emitters.getOrDefault(roundId, Set.of());
         roundEmitters.forEach(emitter -> {
             try {
                 emitter.send(SseEmitter.event().name("progress").data(payload));
-            } catch (IOException exception) {
+            } catch (IOException | IllegalStateException exception) {
                 remove(roundId, emitter);
             }
         });
@@ -48,7 +51,7 @@ public class SseHub {
         emitters.forEach((roundId, roundEmitters) -> roundEmitters.forEach(emitter -> {
             try {
                 emitter.send(SseEmitter.event().comment("heartbeat"));
-            } catch (IOException exception) {
+            } catch (IOException | IllegalStateException exception) {
                 remove(roundId, emitter);
             }
         }));
@@ -61,7 +64,8 @@ public class SseHub {
         }
         roundEmitters.remove(emitter);
         if (roundEmitters.isEmpty()) {
-            emitters.remove(roundId);
+            // 只删除当前观察到的集合，避免并发订阅刚建立时误删新的映射。
+            emitters.remove(roundId, roundEmitters);
         }
     }
 }

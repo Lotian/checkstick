@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { api, clearCsrfToken, errorMessage, setCsrfToken } from './client'
 
@@ -40,5 +41,19 @@ describe('管理端 CSRF 请求头', () => {
     }
 
     expect(errorMessage(error)).toBe('请求失败（HTTP 403 · FORBIDDEN）')
+  })
+
+  it('普通 GET 返回 403 时不递归刷新 CSRF 令牌', async () => {
+    let requestCount = 0
+    api.defaults.adapter = async (config) => {
+      requestCount += 1
+      const error = new axios.AxiosError('Forbidden', 'ERR_BAD_RESPONSE', config, undefined, {
+        data: {}, status: 403, statusText: 'Forbidden', headers: {}, config,
+      })
+      throw error
+    }
+
+    await expect(api.get('/admin/groups')).rejects.toBeTruthy()
+    expect(requestCount).toBe(1)
   })
 })

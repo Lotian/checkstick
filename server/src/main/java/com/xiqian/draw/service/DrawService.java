@@ -54,10 +54,12 @@ public class DrawService {
         PublicDtos.DrawResult result = slotRepository.findByRoundIdAndVisitorId(round.getId(), normalizedVisitor)
                 .map(roundMapper::toDrawResult)
                 .orElse(null);
+        // 理论上 drawn 不会超过 maxPlayers；仍做下限保护，避免历史脏数据向前端返回负余量。
+        long remaining = Math.max(0, round.getMaxPlayers() - drawn);
         return new PublicDtos.PublicGroupState(
                 group.getId(), group.getName(), group.getCode(), round.getId(), round.getRoundNumber(),
                 round.getMinPlayers(), round.getMaxPlayers(), round.getStatus(), drawn,
-                round.getMaxPlayers() - drawn, result);
+                remaining, result);
     }
 
     @Transactional
@@ -67,7 +69,9 @@ public class DrawService {
         GameRound round = roundRepository.findCurrentForUpdate(group.getId(), CURRENT_STATUSES)
                 .orElseThrow(() -> new ConflictException("本组还没有开始新的轮次"));
 
-        DrawSlot existing = slotRepository.findByRoundIdAndVisitorId(round.getId(), normalizedVisitor).orElse(null);
+        // 幂等检查必须放在“满员”判断之前：最后一位玩家重试请求时仍应拿回自己的原结果。
+        DrawSlot existing = slotRepository.findByRoundIdAndVisitorId(round.getId(), normalizedVisitor)
+                .orElse(null);
         if (existing != null) {
             return roundMapper.toDrawResult(existing);
         }
@@ -103,7 +107,7 @@ public class DrawService {
     private String normalizeVisitor(String visitorId) {
         try {
             return UUID.fromString(visitorId).toString();
-        } catch (Exception exception) {
+        } catch (IllegalArgumentException | NullPointerException exception) {
             throw new BadRequestException("游客标识无效，请刷新页面重试");
         }
     }

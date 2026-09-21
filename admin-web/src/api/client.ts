@@ -12,6 +12,8 @@ export const api = axios.create({
 
 let csrfToken = ''
 let csrfHeaderName = 'X-XSRF-TOKEN'
+const CSRF_ENDPOINT = '/admin/auth/csrf'
+const SAFE_METHODS = new Set(['get', 'head', 'options'])
 
 export function setCsrfToken(token: string, headerName?: string) {
   csrfToken = token ?? ''
@@ -32,13 +34,17 @@ type RetriableConfig = { __csrfRetried?: boolean }
 api.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
-    // 令牌失效（重新登录、会话重建、多标签页并发）时刷新一次令牌并重放请求。
     if (axios.isAxiosError(error) && error.response?.status === 403) {
-      const config = error.config as (typeof error.config & RetriableConfig) | undefined
-      if (config && !config.__csrfRetried) {
+      const config = error.config as (NonNullable<typeof error.config> & RetriableConfig) | undefined
+      const method = config?.method?.toLowerCase() ?? 'get'
+      const isUnsafeRequest = !SAFE_METHODS.has(method)
+
+      // 仅写请求可能因 CSRF 失效而返回 403。刷新接口本身与普通 GET 不参与重试，
+      // 从而避免服务异常时递归请求 /csrf。
+      if (config && isUnsafeRequest && config.url !== CSRF_ENDPOINT && !config.__csrfRetried) {
         config.__csrfRetried = true
         try {
-          const { data } = await api.get<{ token: string; headerName: string }>('/admin/auth/csrf')
+          const { data } = await api.get<{ token: string; headerName: string }>(CSRF_ENDPOINT)
           setCsrfToken(data.token, data.headerName)
           return await api.request(config)
         } catch {
@@ -58,6 +64,7 @@ export function errorMessage(error: unknown): string {
       const code = data?.code ? ` · ${data.code}` : ''
       return `请求失败（HTTP ${error.response.status}${code}）`
     }
+    if (error.code === 'ECONNABORTED') return '请求超时，请检查现场网络后重试'
     return '连接不到现场服务器，请确认后端已启动'
   }
   return '发生了意外错误，请稍后重试'
