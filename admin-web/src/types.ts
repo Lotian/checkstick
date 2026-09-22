@@ -6,6 +6,15 @@ export interface AppConfig {
   playerBaseUrl: string
 }
 
+/** 玩家扫码后首先看到的故事简介。 */
+export interface StoryIntro {
+  title: string
+  subtitle: string
+  introText: string
+  warningText: string
+  updatedAt?: string
+}
+
 /** 一局的人数区间：签位数量 = maxPlayers，抽满 minPlayers 后可以提前封签。 */
 export interface PlayerRange {
   minPlayers: number

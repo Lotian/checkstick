@@ -81,7 +81,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .group-list small { color: var(--admin-muted); font-size: 10px; }
 .group-code { color: var(--admin-red-bright); font: 700 10px ui-monospace, monospace; letter-spacing: .18em; }
 .empty-groups { margin: 16px 10px; color: var(--admin-muted); font-size: 11px; line-height: 1.7; }
-.rail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 12px; border-top: 1px solid var(--admin-line); }
+.rail-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 12px; border-top: 1px solid var(--admin-line); }
 .rail-actions button { padding: 9px 5px; border: 1px solid var(--admin-line); color: var(--admin-muted); background: transparent; font-size: 10px; cursor: pointer; }
 .rail-actions button:disabled { opacity: .35; cursor: not-allowed; }
 .admin-profile { display: grid; grid-template-columns: 32px 1fr auto; gap: 9px; align-items: center; padding: 14px 16px; border-top: 1px solid var(--admin-line); }

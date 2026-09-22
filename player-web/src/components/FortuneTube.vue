@@ -4,22 +4,15 @@ defineEmits<{ draw: [] }>()
 </script>
 
 <template>
-  <div class="fortune-stage" :class="{ 'is-drawing': drawing }">
-    <div class="fortune-shadow" aria-hidden="true"></div>
-    <div class="fortune-sticks" aria-hidden="true">
-      <i v-for="index in 9" :key="index" :style="{ '--stick': index }"></i>
-    </div>
-    <div class="fortune-tube" aria-hidden="true">
-      <span class="tube-glyph">囍</span>
-      <span class="tube-knot"></span>
-    </div>
-    <button class="draw-button" type="button" :disabled="disabled" @click="$emit('draw')">
-      <span>{{ drawing ? '签意流转中' : '启签' }}</span>
-      <small>{{ drawing ? '请凝神片刻' : '一念既定，不可更改' }}</small>
+  <section class="fortune-stage panel-enter" :class="{ 'is-drawing': drawing }">
+    <img class="fortune-papercut" src="/assets/papercut-smile.png" alt="" />
+    <h2>{{ drawing ? '签意流转' : '一签入命' }}</h2>
+    <p>{{ drawing ? '请凝神片刻，一念既定，不可更改。' : '命签未启，请亲手揭开今夜身份。' }}</p>
+    <button class="cinema-button" type="button" :disabled="disabled" @click="$emit('draw')">
+      {{ drawing ? '正 在 启 签…' : '启 签' }}
     </button>
     <p class="motion-status" role="status" aria-live="polite">
-      {{ drawing ? '签筒正在摇动，身份即将揭晓' : '' }}
+      {{ drawing ? '正在为你抽取身份' : '' }}
     </p>
-  </div>
+  </section>
 </template>
-

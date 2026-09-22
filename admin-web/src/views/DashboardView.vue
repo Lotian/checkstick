@@ -6,7 +6,7 @@ import { api, errorMessage } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import StatCard from '@/components/StatCard.vue'
 import QrPanel from '@/components/QrPanel.vue'
-import type { GameGroup, PlayerRange, RoleTemplate, RoundDetail, RoundListItem } from '@/types'
+import type { GameGroup, PlayerRange, RoleTemplate, RoundDetail, RoundListItem, StoryIntro } from '@/types'
 
 const MIN_PLAYERS_LIMIT = 2
 const MAX_PLAYERS_LIMIT = 20
@@ -26,12 +26,14 @@ const closing = ref(false)
 // 弹层与表单状态
 const createVisible = ref(false)
 const templateVisible = ref(false)
+const storyVisible = ref(false)
 const historyVisible = ref(false)
 const rangeVisible = ref(false)
 const newGroupName = ref('')
 const newGroupRange = reactive({ minPlayers: 5, maxPlayers: 8 })
 const rangeForm = reactive({ minPlayers: 5, maxPlayers: 8 })
 const templates = ref<RoleTemplate[]>([])
+const storyForm = reactive<StoryIntro>({ title: '', subtitle: '', introText: '', warningText: '' })
 const history = ref<RoundListItem[]>([])
 let eventSource: EventSource | null = null
 let selectionSequence = 0
@@ -302,6 +304,36 @@ async function viewHistory(item: RoundListItem) {
   }
 }
 
+async function openStoryIntro() {
+  try {
+    const { data } = await api.get<StoryIntro>('/admin/story-intro')
+    Object.assign(storyForm, data)
+    storyVisible.value = true
+  } catch (error) {
+    ElMessage.error(errorMessage(error))
+  }
+}
+
+async function saveStoryIntro() {
+  if (!storyForm.title.trim() || !storyForm.introText.trim()) {
+    ElMessage.warning('请填写故事标题和简介')
+    return
+  }
+  try {
+    const { data } = await api.put<StoryIntro>('/admin/story-intro', {
+      title: storyForm.title,
+      subtitle: storyForm.subtitle,
+      introText: storyForm.introText,
+      warningText: storyForm.warningText,
+    })
+    Object.assign(storyForm, data)
+    storyVisible.value = false
+    ElMessage.success('故事简介已经保存，玩家下次扫码或刷新后生效')
+  } catch (error) {
+    ElMessage.error(errorMessage(error))
+  }
+}
+
 function exportCsv() {
   if (round.value) window.open(`/api/admin/rounds/${round.value.id}/export.csv`)
 }
@@ -346,6 +378,7 @@ onBeforeUnmount(closeEvents)
       </nav>
 
       <div class="rail-actions">
+        <button type="button" @click="openStoryIntro">故事简介</button>
         <button type="button" @click="openTemplates">身份内容</button>
         <button type="button" :disabled="!selectedGroup" @click="openHistory">历史轮次</button>
       </div>
@@ -520,8 +553,7 @@ onBeforeUnmount(closeEvents)
                 v-model="template.taskText"
                 type="textarea"
                 :rows="3"
-                :disabled="template.roleType === 'VILLAGER'"
-                :placeholder="template.roleType === 'VILLAGER' ? '村民暂无任务' : '第一步\n第二步'"
+                :placeholder="template.roleType === 'VILLAGER' ? '默认无任务，也可按活动需要填写' : '第一步\n第二步'"
               />
             </el-form-item>
             <el-form-item label="奖励文本">
@@ -531,6 +563,29 @@ onBeforeUnmount(closeEvents)
         </section>
       </div>
       <div class="drawer-save"><el-button type="primary" size="large" @click="saveTemplates">保存全部内容</el-button></div>
+    </el-drawer>
+
+    <el-drawer v-model="storyVisible" title="玩家端故事简介" size="min(680px, 92vw)">
+      <p class="drawer-intro">
+        玩家扫码后会先阅读这里的内容，再点「下一步」输入组局码。保存后，玩家刷新页面即可看到新内容。
+      </p>
+      <el-form label-position="top">
+        <el-form-item label="标题（必填）">
+          <el-input v-model="storyForm.title" maxlength="80" show-word-limit />
+        </el-form-item>
+        <el-form-item label="副标题">
+          <el-input v-model="storyForm.subtitle" maxlength="160" show-word-limit />
+        </el-form-item>
+        <el-form-item label="故事简介（必填）">
+          <el-input v-model="storyForm.introText" type="textarea" :rows="10" maxlength="4000" show-word-limit />
+        </el-form-item>
+        <el-form-item label="安全警告">
+          <el-input v-model="storyForm.warningText" type="textarea" :rows="5" maxlength="2000" show-word-limit />
+        </el-form-item>
+      </el-form>
+      <div class="drawer-save">
+        <el-button type="primary" size="large" @click="saveStoryIntro">保存故事简介</el-button>
+      </div>
     </el-drawer>
 
     <el-drawer v-model="historyVisible" title="历史轮次" size="520px">

@@ -38,8 +38,8 @@ public class RoleTemplate {
     }
 
     public void update(String taskText, String rewardText) {
-        // 村民首版不允许配置任务，防止后台误填后被玩家看到。
-        this.taskText = roleType == RoleType.VILLAGER ? "" : normalize(taskText);
+        // 三种身份共用同一套编辑规则；村民默认无任务，但后台可按活动需要配置。
+        this.taskText = normalize(taskText);
         this.rewardText = normalize(rewardText);
         this.updatedAt = OffsetDateTime.now();
     }

@@ -6,6 +6,11 @@ import { taskSteps } from '@/utils/text'
 const props = defineProps<{ result: DrawResult }>()
 const steps = computed(() => taskSteps(props.result.taskText))
 const roleClass = computed(() => `role-card--${props.result.roleType.toLowerCase()}`)
+const figureSource = computed(() => {
+  if (props.result.roleType === 'GROOM') return '/assets/papercut-groom.png'
+  if (props.result.roleType === 'BRIDE') return '/assets/papercut-bride.png'
+  return '/assets/shot-16.jpg'
+})
 </script>
 
 <template>
@@ -18,6 +23,10 @@ const roleClass = computed(() => `role-card--${props.result.roleType.toLowerCase
     <p class="role-subtitle">
       {{ result.roleType === 'VILLAGER' ? '旁观喜事，静候因果' : '红线相牵，照签行事' }}
     </p>
+
+    <div class="role-figure" :class="{ 'role-figure--photo': result.roleType === 'VILLAGER' }">
+      <img :src="figureSource" :alt="`${result.roleName}身份形象`" />
+    </div>
 
     <section class="task-section">
       <h2><span>壹</span> 今夜之事</h2>
@@ -37,7 +46,7 @@ const roleClass = computed(() => `role-card--${props.result.roleType.toLowerCase
         <p>{{ result.rewardText || '请持此身份卡向工作人员确认' }}</p>
       </div>
     </section>
-    <p class="card-note">此签仅本轮有效 · 请勿将身份示于他人</p>
+    <p class="card-note">此 签 仅 本 轮 有 效</p>
   </article>
 </template>
 

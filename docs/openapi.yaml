@@ -5,6 +5,15 @@ info:
 servers:
   - url: /api
 paths:
+  /public/story-intro:
+    get:
+      summary: 获取玩家扫码后展示的故事简介
+      responses:
+        '200':
+          description: 当前故事简介配置
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoryIntro' }
   /public/groups/{code}/state:
     get:
       summary: 查询当前轮次以及游客已有抽签结果
@@ -64,6 +73,30 @@ paths:
                 type: object
                 properties:
                   playerBaseUrl: { type: string }
+  /admin/story-intro:
+    get:
+      summary: 获取故事简介配置
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: 当前故事简介配置
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoryIntro' }
+    put:
+      summary: 更新故事简介配置
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoryIntro' }
+      responses:
+        '200':
+          description: 更新后的故事简介配置
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoryIntro' }
   /admin/groups:
     get:
       summary: 查询全部组局
@@ -222,6 +255,15 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    StoryIntro:
+      type: object
+      required: [title, subtitle, introText, warningText]
+      properties:
+        title: { type: string, maxLength: 80 }
+        subtitle: { type: string, maxLength: 160 }
+        introText: { type: string, maxLength: 4000 }
+        warningText: { type: string, maxLength: 2000 }
+        updatedAt: { type: string, format: date-time, readOnly: true }
     RoundStatus:
       type: string
       enum: [ACTIVE, FULL, CLOSED]
