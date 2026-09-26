@@ -1,17 +1,32 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, errorMessage } from '@/api/client'
-import { isCompleteGroupCode, normalizeGroupCode } from '@/utils/code'
+import { isCompleteGroupCode, normalizeGroupCode, resolveStoredGroupCode } from '@/utils/code'
 import { getVisitorId } from '@/utils/visitor'
 import type { DrawResult, PublicGroupState } from '@/types'
 
 const GROUP_KEY = 'xiqian.group-code'
 
-/** 读取历史组局码时兼容禁用 localStorage 的浏览器环境。 */
+/**
+ * 读取历史组局码（兼容禁用 localStorage 的浏览器环境）。
+ *
+ * 只沿用「本身就是完整 4 位数字码」的值：旧版 6 位字母数字码（如 RR98DN）整体丢弃。
+ * 早先这里用了 normalizeGroupCode，会把 RR98DN 剔成 "98" 当成用户已输入的内容，
+ * 导致入局页输入框默认显示 "98"。
+ *
+ * 另外顺手清掉无效的历史值（自愈）：否则每次打开页面都要再判断一次，
+ * 而且用户永远带着一份用不上的脏数据。
+ */
 function storedGroupCode(): string {
   try {
-    return normalizeGroupCode(localStorage.getItem(GROUP_KEY))
+    const stored = localStorage.getItem(GROUP_KEY)
+    const valid = resolveStoredGroupCode(stored)
+    if (stored !== null && valid === '') {
+      localStorage.removeItem(GROUP_KEY)
+    }
+    return valid
   } catch {
+    // 隐私模式等禁用 localStorage 的环境：当作没有历史值，本次会话仍可正常入局。
     return ''
   }
 }
@@ -25,7 +40,7 @@ function rememberGroupCode(code: string) {
 }
 
 export const useDrawStore = defineStore('draw', () => {
-  // 历史值可能是旧版 6 位字母数字码，统一规范化成 4 位数字
+  // 历史值只接受完整的 4 位数字码，其余（含旧版 6 位码）都当作没存过
   const groupCode = ref(storedGroupCode())
   const state = ref<PublicGroupState | null>(null)
   const result = ref<DrawResult | null>(null)

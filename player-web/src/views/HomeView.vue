@@ -16,7 +16,8 @@ const DEFAULT_STORY: StoryIntro = {
 
 const store = useDrawStore()
 const stage = ref<'intro' | 'game'>('intro')
-const codeInput = ref(normalizeGroupCode(store.groupCode))
+// store.groupCode 已保证是「完整的 4 位数字码」或空串（见 utils/code.ts 的历史值迁移规则）
+const codeInput = ref(store.groupCode)
 const story = reactive<StoryIntro>({ ...DEFAULT_STORY })
 const showResult = computed(() => Boolean(store.result) && !store.drawing)
 const codeDigits = computed(() => Array.from({ length: 4 }, (_, index) => codeInput.value[index] ?? ''))
@@ -45,7 +46,8 @@ async function submitCode() {
 
 function leaveGroup() {
   store.leave()
-  codeInput.value = normalizeGroupCode(store.groupCode)
+  // 回到入局页时保留上一次的组局码（store 里的值一定是有效码或空串），方便同一桌重新进入
+  codeInput.value = store.groupCode
 }
 
 onMounted(loadStory)

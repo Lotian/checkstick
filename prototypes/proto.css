@@ -1,0 +1,385 @@
+/* 囍签 · 玩家端原型共用样式（三版共用，各版只覆盖自己的主题变量） */
+
+:root {
+  --font-display: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+  --font-body: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  --phone-w: 390px;
+  --phone-h: 844px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  background: #0d0708;
+  color: #f2e7d3;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- 页面骨架 */
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 24px 72px;
+}
+
+.stage__aside { width: 330px; }
+
+.stage__title {
+  margin: 0 0 6px;
+  font: 600 26px/1.3 var(--font-display);
+  letter-spacing: .08em;
+}
+
+.stage__sub {
+  margin: 0 0 22px;
+  color: #a08c78;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.panel {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(240, 219, 179, .16);
+  background: rgba(255, 255, 255, .03);
+}
+
+.panel h3 {
+  margin: 0 0 10px;
+  font: 600 14px var(--font-display);
+  letter-spacing: .12em;
+  color: #e8b96b;
+}
+
+.panel ul { margin: 0; padding-left: 18px; }
+.panel li { font-size: 12.5px; line-height: 1.9; color: #c8b49c; }
+.panel code {
+  padding: 1px 5px;
+  background: rgba(240, 219, 179, .1);
+  font-size: 11.5px;
+  color: #f0dbb3;
+}
+
+/* ---------------------------------------------------------------- 状态切换条 */
+.statebar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+
+.statebar button {
+  padding: 7px 12px;
+  border: 1px solid rgba(240, 219, 179, .22);
+  border-radius: 2px;
+  background: transparent;
+  color: #c8b49c;
+  font: 12px var(--font-body);
+  cursor: pointer;
+}
+
+.statebar button:hover { border-color: #e8b96b; color: #f0dbb3; }
+.statebar button.on { border-color: #b8383a; background: rgba(184, 56, 58, .18); color: #ffd9a0; }
+
+/* ---------------------------------------------------------------- 手机框 */
+.phone {
+  position: relative;
+  width: var(--phone-w);
+  height: var(--phone-h);
+  padding: 12px;
+  border-radius: 46px;
+  background: linear-gradient(160deg, #241618, #0b0607 60%);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, .7), 0 0 0 1px rgba(255, 255, 255, .06);
+  flex: 0 0 auto;
+}
+
+.phone__notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 6;
+  width: 118px;
+  height: 26px;
+  border-radius: 0 0 16px 16px;
+  background: #080405;
+  transform: translateX(-50%);
+}
+
+.screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 34px;
+  background: var(--bg, #16090a);
+  color: var(--ink, #f2e7d3);
+}
+
+/* 背景层：图片 + 渐变压暗，保证任何素材上文字都可读 */
+.screen__bg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--bg-image, none), var(--bg-gradient, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  opacity: var(--bg-opacity, 1);
+}
+
+.screen__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--veil, linear-gradient(180deg, rgba(12, 6, 7, .55), rgba(12, 6, 7, .9)));
+}
+
+.screen__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 34px 22px 26px;
+  overflow-y: auto;
+}
+
+/* 状态显隐 */
+.screen [data-sc] { display: none; }
+.screen[data-state="join"]     [data-sc="join"],
+.screen[data-state="waiting"]  [data-sc="waiting"],
+.screen[data-state="drawing"]  [data-sc="drawing"],
+.screen[data-state="groom"]    [data-sc="result"],
+.screen[data-state="bride"]    [data-sc="result"],
+.screen[data-state="villager"] [data-sc="result"],
+.screen[data-state="full"]     [data-sc="full"] { display: flex; flex-direction: column; flex: 1; }
+
+/* 抽签结果按身份切换卡面 */
+.screen .role--groom    { display: none; }
+.screen .role--bride    { display: none; }
+.screen .role--villager { display: none; }
+.screen[data-state="groom"]    .role--groom,
+.screen[data-state="bride"]    .role--bride,
+.screen[data-state="villager"] .role--villager { display: block; }
+
+/* ---------------------------------------------------------------- 品牌与标题 */
+.brand { text-align: center; margin-bottom: 6px; }
+.brand img { width: var(--logo-w, 190px); }
+.brand__sub {
+  margin: 10px 0 0;
+  color: var(--muted, #b9a68f);
+  font-size: 11px;
+  letter-spacing: .34em;
+}
+
+.ribbon {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border: 1px solid var(--line, rgba(240, 219, 179, .18));
+  color: var(--muted, #b9a68f);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+}
+
+.ribbon b { color: var(--accent-text, #ffd9a0); font-weight: 600; }
+
+/* ---------------------------------------------------------------- 入局：组局码 */
+.join { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.join h2 { margin: 0; font: 600 30px/1.35 var(--font-display); letter-spacing: .1em; text-align: center; }
+.join p { margin: 0; color: var(--muted, #b9a68f); font-size: 12.5px; line-height: 1.9; text-align: center; }
+
+.code { display: flex; gap: 12px; justify-content: center; margin: 4px 0; }
+
+.code i {
+  display: grid;
+  width: 58px;
+  height: 68px;
+  border: 1px solid var(--line, rgba(240, 219, 179, .26));
+  background: var(--slot-bg, rgba(255, 255, 255, .04));
+  font: 500 30px/1 var(--font-display);
+  font-style: normal;
+  place-items: center;
+  color: var(--accent-text, #ffd9a0);
+}
+
+.code i.empty { color: var(--muted, #8d7a66); }
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  border: 1px solid var(--btn-line, #b8383a);
+  background: var(--btn-bg, linear-gradient(120deg, #8e1f22, #c0483f));
+  color: #fff6e6;
+  font: 600 15px var(--font-display);
+  letter-spacing: .3em;
+  text-indent: .3em;
+  text-align: center;
+  cursor: pointer;
+}
+
+.btn--ghost { background: transparent; border-color: var(--line, rgba(240, 219, 179, .28)); color: var(--muted, #c8b49c); }
+
+/* ---------------------------------------------------------------- 剪纸主视觉 */
+.papercut { display: grid; place-items: center; margin: 6px 0 14px; }
+.papercut img {
+  width: var(--papercut-w, 250px);
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, .55));
+}
+.papercut--spin img { animation: spin 2.6s cubic-bezier(.4, 0, .2, 1) infinite; }
+@keyframes spin {
+  0%   { transform: rotate(-9deg) scale(.96); }
+  50%  { transform: rotate(9deg) scale(1.02); }
+  100% { transform: rotate(-9deg) scale(.96); }
+}
+
+/* 印章 */
+.seal { position: absolute; right: 20px; bottom: 18px; width: 62px; opacity: .9; }
+.seal img { width: 100%; }
+
+/* ---------------------------------------------------------------- 身份卡 */
+.idcard {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+  border: 1px solid var(--card-line, rgba(238, 214, 170, .3));
+  background: var(--card-bg, linear-gradient(178deg, rgba(238, 214, 170, .97), rgba(214, 184, 137, .95)));
+  color: #35251e;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+  overflow: hidden;
+}
+
+.idcard__eyebrow {
+  margin: 0;
+  color: #8a6a4d;
+  font-size: 9.5px;
+  letter-spacing: .3em;
+  text-align: center;
+}
+
+.idcard__role {
+  margin: 8px 0 0;
+  font: 600 30px/1.2 var(--font-display);
+  letter-spacing: .16em;
+  text-align: center;
+}
+
+.idcard__sub {
+  margin: 6px 0 0;
+  color: #6d5442;
+  font-size: 11px;
+  text-align: center;
+  letter-spacing: .1em;
+}
+
+.idcard__figure {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-items: center;
+  margin: 12px 0 4px;
+}
+
+.idcard__figure img {
+  max-height: 200px;
+  max-width: 100%;
+  filter: drop-shadow(0 10px 18px rgba(60, 30, 20, .38));
+}
+
+.idcard__section { margin-top: 14px; border-top: 1px dashed rgba(120, 88, 62, .42); padding-top: 12px; }
+.idcard__section h4 {
+  margin: 0 0 8px;
+  font: 600 12px var(--font-display);
+  letter-spacing: .2em;
+  color: #8e2826;
+}
+
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.steps li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.7; }
+.steps li span { color: #9b2928; font: 700 10px/1.9 ui-monospace, monospace; }
+
+.reward { display: flex; gap: 10px; align-items: center; }
+.reward__seal {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #8e2826;
+  border-radius: 50%;
+  color: #8e2826;
+  font: 18px/30px var(--font-display);
+  place-items: center;
+  transform: rotate(-8deg);
+  flex: 0 0 auto;
+}
+.reward p { margin: 0; font-size: 12px; line-height: 1.7; color: #4a362a; }
+
+.idcard__note {
+  margin: 12px 0 0;
+  color: #8a6a4d;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- 候签 / 满员 */
+.state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.state h2 { margin: 0; font: 600 28px var(--font-display); letter-spacing: .14em; }
+.state p { margin: 0; max-width: 260px; color: var(--muted, #b9a68f); font-size: 12.5px; line-height: 1.9; }
+
+.live {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--line, rgba(240, 219, 179, .2));
+  color: var(--muted, #b9a68f);
+  font-size: 11px;
+}
+.live i { width: 6px; height: 6px; border-radius: 50%; background: #c5484f; }
+
+/* 素材图例 */
+.legend { display: grid; gap: 8px; }
+.legend__row { display: grid; grid-template-columns: 54px 1fr; gap: 10px; align-items: center; }
+.legend__row img { width: 54px; height: 40px; object-fit: contain; background: rgba(255, 255, 255, .04); }
+.legend__row p { margin: 0; font-size: 11.5px; line-height: 1.6; color: #c8b49c; }
+
+/* ---------------------------------------------------------------- 自家品牌（不借用《纸嫁衣》logo） */
+.wordmark {
+  margin: 0;
+  font: 600 40px/1.1 var(--font-display);
+  letter-spacing: .26em;
+  text-indent: .26em;
+  color: var(--wm-color, #e8b96b);
+}
+.wordmark i {
+  margin-right: .06em;
+  font-style: normal;
+  color: var(--wm-accent, #c5484f);
+}
+
+/* 纯 CSS 画的朱砂印章（囍），替代游戏 logo */
+.seal {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  border: 2px solid var(--seal-color, #b8383a);
+  background: var(--seal-bg, rgba(184, 56, 58, .1));
+  color: var(--seal-color, #b8383a);
+  font: 30px/1 var(--font-display);
+  place-items: center;
+  transform: rotate(-7deg);
+}
+.seal i { font-style: normal; }
+
+/* 白底立绘：用 multiply 让白底融进纸色，不需要抠图 */
+.portrait { mix-blend-mode: multiply; }
+

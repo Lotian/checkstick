@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>原型三 · 宣纸素签（囍签玩家端）</title>
+<link rel="stylesheet" href="proto.css" />
+<style>
+  /* ===== 主题三：宣纸素签 =====
+     完全反过来：浅色宣纸底 + 朱砂红，红剪纸人在白纸上是经典中式配色。
+     白天/户外、微信内置浏览器（亮度自动压暗）下最清晰。 */
+  .screen {
+    --bg: #f3ead6;
+    --ink: #3a2a22;
+    --muted: #8a7460;
+    --accent-text: #9b2928;
+    --line: rgba(155, 41, 40, .28);
+    --slot-bg: rgba(255, 255, 255, .78);
+    --logo-w: 176px;
+    --papercut-w: 230px;
+    --btn-bg: linear-gradient(120deg, #9b2928, #c0392b);
+    --btn-line: #8e2826;
+    --wm-color: #7d1f1e;
+    --wm-accent: #9b2928;
+    --seal-color: #9b2928;
+    --seal-bg: rgba(155, 41, 40, .08);
+    --card-bg: #fffaf0;
+    --card-line: rgba(155, 41, 40, .45);
+    --veil: radial-gradient(120% 70% at 50% 0%, rgba(255, 253, 246, .6), rgba(238, 226, 203, .92) 70%);
+  }
+
+  /* 宣纸纹理（纯 CSS，不占流量） */
+  .screen__inner::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background-image: repeating-linear-gradient(0deg, rgba(120, 90, 60, .05) 0 1px, transparent 1px 4px),
+                      repeating-linear-gradient(90deg, rgba(120, 90, 60, .05) 0 1px, transparent 1px 4px);
+    pointer-events: none;
+  }
+  .screen__inner > * { position: relative; }
+
+  /* 页头：一条剪纸横幅。
+     注意：素材包里的 7.jpg / 8.jpg 我原以为是"浅色剧照"，实际是含《纸嫁衣》logo
+     与设计说明文字的官方设定稿，不能用作界面背景，所以浅色版改成剪纸横幅。 */
+  .paperband {
+    display: grid;
+    margin: -8px -22px 16px;
+    padding: 6px 0 10px;
+    border-bottom: 2px solid rgba(155, 41, 40, .45);
+    background: linear-gradient(180deg, rgba(155, 41, 40, .07), transparent);
+    place-items: center;
+  }
+  .paperband img { width: 220px; }
+
+  .brand__sub { color: #8a7460; }
+
+  .code i {
+    border-width: 2px;
+    color: #9b2928;
+    box-shadow: 0 2px 0 rgba(120, 90, 60, .12);
+  }
+
+  .idcard { box-shadow: 0 10px 26px rgba(90, 60, 40, .18); }
+  .idcard::after { position: absolute; inset: 6px; content: ''; border: 1px solid rgba(155, 41, 40, .3); pointer-events: none; }
+  .idcard__role { color: #7d1f1e; }
+  .idcard__figure { background: radial-gradient(60% 60% at 50% 45%, rgba(155, 41, 40, .07), transparent 70%); }
+  .idcard__note { color: #9c8672; }
+
+  .ribbon { background: rgba(255, 255, 255, .6); }
+  .ribbon b { color: #9b2928; }
+  .live { background: rgba(255, 255, 255, .6); }
+  .seal img { mix-blend-mode: multiply; }
+
+  /* 剪纸：白纸上的红剪影，给一点点纸感阴影 */
+  .papercut img { filter: drop-shadow(0 8px 14px rgba(120, 70, 40, .28)); }
+
+  .stamp {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    width: 54px;
+    height: 54px;
+    opacity: .9;
+    mix-blend-mode: multiply;
+  }
+  .stamp.seal { font-size: 26px; border-width: 2px; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <aside class="stage__aside">
+    <h1 class="stage__title">版本三 · 宣纸素签</h1>
+    <p class="stage__sub">
+      唯一的<b>浅色版</b>：宣纸米白底 + 朱砂红描边，红剪纸小人放在白纸上是经典中式配色。
+      户外、白天、微信里打开时最清楚，老人和新手也最容易读。
+    </p>
+
+    <div class="statebar">
+      <button data-goto="join" class="on">入局</button>
+      <button data-goto="waiting">候签</button>
+      <button data-goto="drawing">摇签</button>
+      <button data-goto="groom">抽到新郎</button>
+      <button data-goto="bride">抽到新娘</button>
+      <button data-goto="villager">抽到村民</button>
+      <button data-goto="full">本轮签尽</button>
+    </div>
+
+    <div class="panel">
+      <h3>这一版用了哪些素材</h3>
+      <div class="legend">
+        <div class="legend__row"><img src="assets/papercut-smile.png" alt="" /><p><code>小人剪纸-笑.png</code> 页头横幅 + 切出两张身份卡</p></div>
+        <div class="legend__row"><img src="assets/papercut-cry.png" alt="" /><p><code>小人剪纸-哭.png</code> 候签 / 签尽</p></div>
+        <div class="legend__row"><img src="assets/char-grandma.png" alt="" /><p><code>老太婆.png</code> 村民卡（白底 multiply 融进纸色）</p></div>
+        <div class="legend__row"><img src="assets/papercut-bride.png" alt="" /><p>切出的新娘剪纸（含囍的左半）</p></div>
+      </div>
+      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.8;color:#8d7a66">
+        这一版刻意<b>不用任何照片背景</b>：素材里可安全使用的照片都是暗调的，
+        浅色版改成"宣纸底 + 剪纸"更统一，也最省流量。字标与印章为自绘。
+      </p>
+    </div>
+
+    <div class="panel">
+      <h3>适合什么场合</h3>
+      <ul>
+        <li>白天、户外、门口扫码（强光下深色版会看不清）</li>
+        <li>玩家年龄跨度大，需要"一眼看懂"</li>
+        <li>素材最少：只有 1 张照片条 + 1 个剪纸人，首屏最快</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="phone">
+    <div class="phone__notch"></div>
+    <div class="screen" data-state="join">
+      <div class="screen__bg"></div>
+      <div class="screen__veil"></div>
+
+      <div class="screen__inner">
+
+        <div data-sc="join" class="join">
+          <div class="paperband"><img src="assets/papercut-smile.png" alt="" /></div>
+          <div class="brand">
+            <h1 class="wordmark"><i>囍</i>签</h1>
+            <p class="brand__sub">纸 上 姻 缘 · 一 签 入 局</p>
+          </div>
+          <h2 style="color:#7d1f1e">请录组局暗号</h2>
+          <p>四字为引，寻得今夜属于你的那一桌。</p>
+          <div class="code"><i>1</i><i>0</i><i>2</i><i>4</i></div>
+          <button class="btn">推 门 入 局</button>
+          <p style="font-size:11px;color:#9c8672">桌面立牌上有四位数字组局码</p>
+        </div>
+
+        <div data-sc="waiting" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2 style="color:#7d1f1e">吉时未至</h2>
+          <p>工作人员尚未开新一轮，请在厅内稍候。</p>
+          <div class="ribbon"><span>本局</span><b>5 ~ 8 人</b><span>·</span><span>等待开轮</span></div>
+          <button class="btn btn--ghost" style="color:#8a7460;border-color:rgba(155,41,40,.35)">再 探 一 次</button>
+        </div>
+
+        <div data-sc="drawing" class="state">
+          <div class="papercut papercut--spin"><img src="assets/papercut-smile.png" alt="" /></div>
+          <h2 style="color:#7d1f1e">签意流转</h2>
+          <p>请凝神片刻，一念既定，不可更改。</p>
+          <div class="live"><i></i><span>正在为你抽签…</span></div>
+        </div>
+
+        <div data-sc="result">
+          <article class="idcard role--groom">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新郎</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-groom.png" alt="新郎" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新娘并完成合影</p></li>
+                <li><span>02</span><p>向工作人员说出指定暗号</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>完成任务后，凭身份卡向工作人员领取奖励</p></div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+
+          <article class="idcard role--bride">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新娘</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-bride.png" alt="新娘" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新郎并交换线索</p></li>
+                <li><span>02</span><p>与新郎共同完成指定动作</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>完成任务后，凭身份卡向工作人员领取奖励</p></div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+
+          <article class="idcard role--villager">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">村民</h3>
+            <p class="idcard__sub">旁观喜事，静候因果</p>
+            <div class="idcard__figure"><img class="portrait" src="assets/char-grandma.png" alt="村民" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <p style="margin:0;text-align:center;letter-spacing:.3em;color:#8a7460;font:15px var(--font-display)">暂 · 无 · 任 · 务</p>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>凭身份卡向工作人员领取参与奖励</p></div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+        </div>
+
+        <div data-sc="full" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2 style="color:#7d1f1e">本轮签尽</h2>
+          <p>此轮身份均已有主，请等待工作人员开新一轮。</p>
+          <div class="ribbon"><span>第 2 轮</span><b>8 / 8</b><span>已封签</span></div>
+          <button class="btn btn--ghost" style="color:#8a7460;border-color:rgba(155,41,40,.35)">查 看 新 轮</button>
+        </div>
+
+      </div>
+      <div class="stamp seal"><i>囍</i></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const screen = document.querySelector('.screen')
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      screen.dataset.state = btn.dataset.goto
+      document.querySelectorAll('[data-goto]').forEach(b => b.classList.toggle('on', b === btn))
+    })
+  })
+</script>
+</body>
+</html>

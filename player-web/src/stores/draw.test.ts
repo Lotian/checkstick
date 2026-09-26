@@ -1,8 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/api/client'
 import type { PublicGroupState } from '@/types'
 import { useDrawStore } from './draw'
+
+const GROUP_KEY = 'xiqian.group-code'
 
 vi.mock('@/api/client', () => ({
   api: { get: vi.fn(), post: vi.fn() },
@@ -12,6 +14,17 @@ vi.mock('@/api/client', () => ({
 vi.mock('@/utils/visitor', () => ({
   getVisitorId: () => 'a6bb7fd0-34a3-4c2f-8c7e-46276669a641',
 }))
+
+/** 造一个可控的 localStorage，用于验证历史组局码的迁移行为。 */
+function stubLocalStorage(initial: Record<string, string>) {
+  const map = new Map(Object.entries(initial))
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => (map.has(key) ? (map.get(key) as string) : null),
+    setItem: (key: string, value: string) => void map.set(key, String(value)),
+    removeItem: (key: string) => void map.delete(key),
+  })
+  return map
+}
 
 function groupState(code: string, name: string): PublicGroupState {
   return {
@@ -33,6 +46,10 @@ describe('玩家入局状态', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(api.get).mockReset()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('拒绝不完整组局码且不发送请求', async () => {
@@ -61,5 +78,29 @@ describe('玩家入局状态', () => {
 
     expect(store.groupCode).toBe('2048')
     expect(store.state?.groupName).toBe('二号厅')
+  })
+
+  // 回归：入局页输入框曾默认显示 "98"——旧版 6 位码 RR98DN 被抠出了数字
+  describe('历史组局码迁移', () => {
+    it('丢弃旧版 6 位字母数字码，输入框初值为空并清掉脏数据', () => {
+      const map = stubLocalStorage({ [GROUP_KEY]: 'RR98DN' })
+
+      const store = useDrawStore()
+
+      expect(store.groupCode).toBe('')
+      expect(map.has(GROUP_KEY)).toBe(false)
+    })
+
+    it('丢弃被抠剩的半截数字', () => {
+      stubLocalStorage({ [GROUP_KEY]: '98' })
+
+      expect(useDrawStore().groupCode).toBe('')
+    })
+
+    it('沿用本身就是完整的 4 位数字码', () => {
+      stubLocalStorage({ [GROUP_KEY]: '1024' })
+
+      expect(useDrawStore().groupCode).toBe('1024')
+    })
   })
 })

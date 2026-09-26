@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>原型二 · 旧梦剧照（囍签玩家端）</title>
+<link rel="stylesheet" href="proto.css" />
+<style>
+  /* ===== 主题二：旧梦剧照 =====
+     整体：每一屏都是一张全屏宣传图（cover）+ 强渐变压暗，文字压在暗部。
+     身份卡改成"暗色玻璃卡"，立绘在上、文字在下，像电影剧照卡。 */
+  .screen {
+    --bg: #0a0506;
+    --ink: #f4e9d7;
+    --muted: #b6a08a;
+    --accent-text: #e9b464;
+    --line: rgba(233, 180, 100, .28);
+    --slot-bg: rgba(0, 0, 0, .35);
+    --logo-w: 186px;
+    --papercut-w: 220px;
+    --card-bg: linear-gradient(180deg, rgba(18, 10, 11, .82), rgba(12, 6, 7, .92));
+    --card-line: rgba(233, 180, 100, .35);
+  }
+
+  /* 每一屏各自的剧照（全部为逐张确认过内容的素材） */
+  .screen[data-state="join"]     { --bg-image: url('assets/scene-sedan.jpg'); }   /* 雾中纸花轿 */
+  .screen[data-state="waiting"]  { --bg-image: url('assets/shot-4.png'); }        /* 河灯 */
+  .screen[data-state="drawing"]  { --bg-image: url('assets/shot-35.jpg'); }       /* 姻缘牌 */
+  .screen[data-state="groom"]    { --bg-image: url('assets/scene-couple.jpg'); }  /* 婚礼双人 */
+  .screen[data-state="bride"]    { --bg-image: url('assets/scene-mirror.jpg'); }  /* 对镜新娘 */
+  .screen[data-state="villager"] { --bg-image: url('assets/shot-16.jpg'); }       /* 两个纸人 */
+  .screen[data-state="full"]     { --bg-image: url('assets/shot-40.jpg'); }       /* 红绸廊道 */
+
+  /* 更强的压暗：剧照信息量大，必须保证文字可读 */
+  .screen {
+    --veil: linear-gradient(180deg, rgba(8, 4, 5, .72) 0%, rgba(8, 4, 5, .38) 34%, rgba(8, 4, 5, .82) 78%, rgba(8, 4, 5, .96) 100%);
+    --bg-opacity: 1;
+  }
+
+  /* 电影感：上下各留一条暗边（像 2.35:1 画幅的遮幅） */
+  .screen::before, .screen::after {
+    position: absolute;
+    left: 0; right: 0;
+    z-index: 4;
+    height: 26px;
+    content: '';
+    background: linear-gradient(180deg, rgba(6, 3, 4, .92), transparent);
+    pointer-events: none;
+  }
+  .screen::before { top: 0; }
+  .screen::after { bottom: 0; background: linear-gradient(0deg, rgba(6, 3, 4, .92), transparent); }
+
+  .screen__inner { padding: 40px 22px 34px; }
+
+  /* 暗色玻璃卡 */
+  .idcard { color: #f4e9d7; backdrop-filter: blur(3px); }
+  .idcard::after { position: absolute; inset: 8px; content: ''; border: 1px solid rgba(233, 180, 100, .22); pointer-events: none; }
+  .idcard__eyebrow { color: #c79a5c; }
+  .idcard__sub { color: #b6a08a; }
+  .idcard__section { border-top-color: rgba(233, 180, 100, .26); }
+  .idcard__section h4 { color: #e9b464; }
+  .steps li span { color: #e9b464; }
+  .reward p { color: #e6d8c2; }
+  .reward__seal { border-color: #e9b464; color: #e9b464; }
+  .idcard__note { color: #9a8570; }
+  .idcard__figure img { max-height: 210px; filter: drop-shadow(0 12px 22px rgba(0, 0, 0, .6)); }
+
+  /* 村民卡用「纸人」照片：满幅裁切 + 金色细框 */
+  .idcard__figure--photo { margin: 12px 0 4px; }
+  .idcard__figure--photo img {
+    width: 100%; max-height: 210px; object-fit: cover; object-position: center 22%;
+    border: 1px solid rgba(233, 180, 100, .32); filter: none;
+  }
+
+  /* 字幕感的小标签 */
+  .caption {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(233, 180, 100, .22);
+    color: #c79a5c;
+    font-size: 10.5px;
+    letter-spacing: .28em;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <aside class="stage__aside">
+    <h1 class="stage__title">版本二 · 旧梦剧照</h1>
+    <p class="stage__sub">
+      每一屏都是一张<b>全屏剧照</b>（轿子 / 街景 / 对镜 / 洞房 / 绣鸳鸯 / 下楼），
+      身份卡做成<b>暗色玻璃卡</b>浮在剧照上。信息层级最简单，最有"电影感/故事感"。
+    </p>
+
+    <div class="statebar">
+      <button data-goto="join" class="on">入局</button>
+      <button data-goto="waiting">候签</button>
+      <button data-goto="drawing">摇签</button>
+      <button data-goto="groom">抽到新郎</button>
+      <button data-goto="bride">抽到新娘</button>
+      <button data-goto="villager">抽到村民</button>
+      <button data-goto="full">本轮签尽</button>
+    </div>
+
+    <div class="panel">
+      <h3>这一版用了哪些素材</h3>
+      <div class="legend">
+        <div class="legend__row"><img src="assets/scene-sedan.jpg" alt="" /><p><code>轿子3.jpg</code> 入局页：雾中纸花轿</p></div>
+        <div class="legend__row"><img src="assets/shot-4.png" alt="" /><p><code>4.png</code> 候签页：河灯</p></div>
+        <div class="legend__row"><img src="assets/shot-35.jpg" alt="" /><p><code>35.png</code> 摇签页：姻缘牌</p></div>
+        <div class="legend__row"><img src="assets/scene-couple.jpg" alt="" /><p><code>新郎新娘.jpg</code> 新郎卡：红盖头与傩面新郎</p></div>
+        <div class="legend__row"><img src="assets/scene-mirror.jpg" alt="" /><p><code>新娘对镜.jpg</code> 新娘卡：对镜新娘（主体偏右）</p></div>
+        <div class="legend__row"><img src="assets/papercut-bride.png" alt="" /><p><code>小人剪纸-笑.png</code> 切出的新娘剪纸</p></div>
+      </div>
+      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.8;color:#8d7a66">
+        页头「囍签」与印章为自绘（文字标 + 纯 CSS）；素材包里的三个 logo 是《纸嫁衣》官方品牌，未使用。
+      </p>
+    </div>
+
+    <div class="panel">
+      <h3>适合什么场合</h3>
+      <ul>
+        <li>想让玩家一打开就"进入故事"，而不是操作界面</li>
+        <li>大屏/线上宣传转发时最出片（截图就能当海报）</li>
+        <li>注意：8 张背景图，首次加载比一版多一些（已压到 90~180KB/张）</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="phone">
+    <div class="phone__notch"></div>
+    <div class="screen" data-state="join">
+      <div class="screen__bg"></div>
+      <div class="screen__veil"></div>
+
+      <div class="screen__inner">
+
+        <div data-sc="join" class="join">
+          <div class="brand">
+            <h1 class="wordmark"><i>囍</i>签</h1>
+            <p class="brand__sub">纸 上 姻 缘 · 一 签 入 局</p>
+          </div>
+          <h2>请录组局暗号</h2>
+          <p>四字为引，寻得今夜属于你的那一桌。</p>
+          <div class="code"><i>1</i><i>0</i><i>2</i><i>4</i></div>
+          <button class="btn">推 门 入 局</button>
+          <p class="brand__sub" style="letter-spacing:.2em">桌 面 立 牌 上 有 四 位 数 字 组 局 码</p>
+        </div>
+
+        <div data-sc="waiting" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2>吉时未至</h2>
+          <p>工作人员尚未开新一轮，请在厅内稍候。</p>
+          <div class="ribbon"><span>本局</span><b>5 ~ 8 人</b><span>·</span><span>等待开轮</span></div>
+          <button class="btn btn--ghost">再 探 一 次</button>
+        </div>
+
+        <div data-sc="drawing" class="state">
+          <div class="papercut papercut--spin"><img src="assets/papercut-smile.png" alt="" /></div>
+          <h2>签意流转</h2>
+          <p>请凝神片刻，一念既定，不可更改。</p>
+          <div class="live"><i></i><span>正在为你抽签…</span></div>
+        </div>
+
+        <div data-sc="result">
+          <article class="idcard role--groom">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新郎</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-groom.png" alt="新郎" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新娘并完成合影</p></li>
+                <li><span>02</span><p>向工作人员说出指定暗号</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>完成任务后，凭身份卡向工作人员领取奖励</p></div>
+            </div>
+            <p class="caption">此 签 仅 本 轮 有 效</p>
+          </article>
+
+          <article class="idcard role--bride">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新娘</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-bride.png" alt="新娘" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新郎并交换线索</p></li>
+                <li><span>02</span><p>与新郎共同完成指定动作</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>完成任务后，凭身份卡向工作人员领取奖励</p></div>
+            </div>
+            <p class="caption">此 签 仅 本 轮 有 效</p>
+          </article>
+
+          <article class="idcard role--villager">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">村民</h3>
+            <p class="idcard__sub">旁观喜事，静候因果</p>
+            <div class="idcard__figure idcard__figure--photo"><img src="assets/shot-16.jpg" alt="村民" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <p style="margin:0;text-align:center;letter-spacing:.3em;color:#c79a5c;font:15px var(--font-display)">暂 · 无 · 任 · 务</p>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div><p>凭身份卡向工作人员领取参与奖励</p></div>
+            </div>
+            <p class="caption">此 签 仅 本 轮 有 效</p>
+          </article>
+        </div>
+
+        <div data-sc="full" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2>本轮签尽</h2>
+          <p>此轮身份均已有主，请等待工作人员开新一轮。</p>
+          <div class="ribbon"><span>第 2 轮</span><b>8 / 8</b><span>已封签</span></div>
+          <button class="btn btn--ghost">查 看 新 轮</button>
+        </div>
+
+      </div>
+      <div class="seal" style="--seal-color:#e9b464;--seal-bg:rgba(233,180,100,.1)"><i>囍</i></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const screen = document.querySelector('.screen')
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      screen.dataset.state = btn.dataset.goto
+      document.querySelectorAll('[data-goto]').forEach(b => b.classList.toggle('on', b === btn))
+    })
+  })
+</script>
+</body>
+</html>

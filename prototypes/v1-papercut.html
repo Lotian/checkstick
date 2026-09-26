@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>原型一 · 红纸剪影（囍签玩家端）</title>
+<link rel="stylesheet" href="proto.css" />
+<style>
+  /* ===== 主题一：红纸剪影 =====
+     整体：近乎纯黑的深红底，让「剪纸新娘/新郎」当绝对主角。
+     每一屏一张背景，全部是我逐张看过、确认过构图与内容的素材。
+     品牌字标是我们自己的「囍签」文字标 + 纯 CSS 印章，不借用游戏 logo。 */
+  .screen {
+    --bg: #16090a;
+    --ink: #f6ead6;
+    --muted: #ab9380;
+    --accent-text: #f0c072;
+    --line: rgba(240, 219, 179, .18);
+    --slot-bg: rgba(255, 255, 255, .035);
+    --wm-color: #efd6a4;
+    --wm-accent: #e0625f;
+    --seal-color: #c5484f;
+    --seal-bg: rgba(197, 72, 79, .12);
+    --veil: radial-gradient(120% 80% at 50% 8%, rgba(90, 16, 18, .5), rgba(10, 5, 6, .95) 62%),
+            linear-gradient(180deg, rgba(10, 5, 6, .3), rgba(10, 5, 6, .9));
+    --logo-w: 200px;
+    --papercut-w: 250px;
+    --card-bg: linear-gradient(178deg, #efd9b2, #d8bb8c);
+    --card-line: rgba(120, 88, 62, .5);
+  }
+
+  /* 每屏背景：门上的囍 → 河灯 → 姻缘牌 → 婚礼双人 → 对镜新娘 → 绣活 → 供桌 */
+  .screen[data-state="join"]     { --bg-image: url('assets/shot-34.jpg');          --bg-opacity: .34; }
+  .screen[data-state="waiting"]  { --bg-image: url('assets/shot-4.png');           --bg-opacity: .38; }
+  .screen[data-state="drawing"]  { --bg-image: url('assets/shot-35.jpg');          --bg-opacity: .34; }
+  .screen[data-state="groom"]    { --bg-image: url('assets/scene-couple.jpg');     --bg-opacity: .30; }
+  .screen[data-state="bride"]    { --bg-image: url('assets/scene-mirror.jpg');     --bg-opacity: .30; }
+  .screen[data-state="villager"] { --bg-image: url('assets/scene-embroidery.jpg'); --bg-opacity: .26; }
+  .screen[data-state="full"]     { --bg-image: url('assets/shot-41.jpg');          --bg-opacity: .32; }
+
+  /* 纸纹：用极淡的横竖线模拟宣纸，避免纯色发闷 */
+  .screen__inner::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 3px),
+                      repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+
+  .screen__inner > * { position: relative; }
+
+  .idcard::after {
+    position: absolute;
+    inset: 7px;
+    content: '';
+    border: 1px solid rgba(120, 88, 62, .35);
+    pointer-events: none;
+  }
+
+  .join h2 em { color: #e5a04a; font-style: normal; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============ 左侧说明（给评审看，不属于页面设计） ============ -->
+  <aside class="stage__aside">
+    <h1 class="stage__title">版本一 · 红纸剪影</h1>
+    <p class="stage__sub">
+      最克制的一版：整屏近黑，让<b>透明红剪纸人</b>和<b>透明角色立绘</b>当绝对主角，
+      场景大图只作为极淡的底纹（16% 透明度）。气质最接近"抽签/仪式"，和现有囍签品牌色最贴。
+    </p>
+
+    <div class="statebar">
+      <button data-goto="join" class="on">入局</button>
+      <button data-goto="waiting">候签</button>
+      <button data-goto="drawing">摇签</button>
+      <button data-goto="groom">抽到新郎</button>
+      <button data-goto="bride">抽到新娘</button>
+      <button data-goto="villager">抽到村民</button>
+      <button data-goto="full">本轮签尽</button>
+    </div>
+
+    <div class="panel">
+      <h3>这一版用了哪些素材</h3>
+      <div class="legend">
+        <div class="legend__row"><img src="assets/papercut-bride.png" alt="" /><p><code>小人剪纸-笑.png</code> 左半 → 新娘身份卡</p></div>
+        <div class="legend__row"><img src="assets/papercut-groom.png" alt="" /><p><code>小人剪纸-笑.png</code> 右半 → 新郎身份卡</p></div>
+        <div class="legend__row"><img src="assets/papercut-cry.png" alt="" /><p><code>小人剪纸-哭.png</code> 候签 / 本轮签尽</p></div>
+        <div class="legend__row"><img src="assets/char-grandma.png" alt="" /><p><code>老太婆.png</code> 村民卡（白底用 multiply 融进纸色）</p></div>
+        <div class="legend__row"><img src="assets/shot-34.jpg" alt="" /><p><code>34.png</code> 入局页背景：贴着囍字的木门</p></div>
+        <div class="legend__row"><img src="assets/shot-4.png" alt="" /><p><code>4.png</code> 候签页背景：河灯</p></div>
+        <div class="legend__row"><img src="assets/shot-35.jpg" alt="" /><p><code>35.png</code> 摇签页背景：姻缘牌</p></div>
+        <div class="legend__row"><img src="assets/scene-couple.jpg" alt="" /><p><code>新郎新娘.jpg</code> 新郎卡背景</p></div>
+      </div>
+      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.8;color:#8d7a66">
+        页头「囍签」与右下印章是<b>我们自己的文字标 + 纯 CSS 印章</b>：
+        素材包里那三个 logo 是《纸嫁衣》官方品牌标，不能当作自家页头使用。
+      </p>
+    </div>
+
+    <div class="panel">
+      <h3>适合什么场合</h3>
+      <ul>
+        <li>现场光线暗、追求"仪式感"的厅</li>
+        <li>希望玩家一进来就觉得"这是抽签，不是小游戏"</li>
+        <li>素材最少、加载最快（首屏只有 1 张底图 + 1 个剪纸人）</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ============ 手机原型 ============ -->
+  <div class="phone">
+    <div class="phone__notch"></div>
+    <div class="screen" data-state="join">
+      <div class="screen__bg"></div>
+      <div class="screen__veil"></div>
+
+      <div class="screen__inner">
+
+        <!-- ---------- 入局 ---------- -->
+        <div data-sc="join" class="join">
+          <div class="brand">
+            <h1 class="wordmark"><i>囍</i>签</h1>
+            <p class="brand__sub">纸 上 姻 缘 · 一 签 入 局</p>
+          </div>
+          <h2>请录<em>组局暗号</em></h2>
+          <p>四字为引，寻得今夜属于你的那一桌。</p>
+          <div class="code">
+            <i>1</i><i>0</i><i>2</i><i>4</i>
+          </div>
+          <button class="btn">推 门 入 局</button>
+          <p style="font-size:11px;color:#7d6a59">桌面立牌上有四位数字组局码</p>
+        </div>
+
+        <!-- ---------- 候签 ---------- -->
+        <div data-sc="waiting" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2>吉时未至</h2>
+          <p>工作人员尚未开新一轮，请在厅内稍候，或再探一次。</p>
+          <div class="ribbon"><span>本局</span><b>5 ~ 8 人</b><span>·</span><span>等待开轮</span></div>
+          <button class="btn btn--ghost">再 探 一 次</button>
+        </div>
+
+        <!-- ---------- 摇签 ---------- -->
+        <div data-sc="drawing" class="state">
+          <div class="papercut papercut--spin"><img src="assets/papercut-smile.png" alt="" /></div>
+          <h2>签意流转</h2>
+          <p>请凝神片刻，一念既定，不可更改。</p>
+          <div class="live"><i></i><span>正在为你抽签…</span></div>
+        </div>
+
+        <!-- ---------- 抽签结果：三种身份 ---------- -->
+        <div data-sc="result">
+          <article class="idcard role--groom">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新郎</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-groom.png" alt="新郎" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新娘并完成合影</p></li>
+                <li><span>02</span><p>向工作人员说出指定暗号</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div>
+                <p>完成任务后，凭身份卡向工作人员领取奖励</p>
+              </div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+
+          <article class="idcard role--bride">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">新娘</h3>
+            <p class="idcard__sub">红线相牵，照签行事</p>
+            <div class="idcard__figure"><img src="assets/papercut-bride.png" alt="新娘" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <ol class="steps">
+                <li><span>01</span><p>找到新郎并交换线索</p></li>
+                <li><span>02</span><p>与新郎共同完成指定动作</p></li>
+              </ol>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div>
+                <p>完成任务后，凭身份卡向工作人员领取奖励</p>
+              </div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+
+          <article class="idcard role--villager">
+            <p class="idcard__eyebrow">红 纸 落 名 · 命 数 已 定</p>
+            <h3 class="idcard__role">村民</h3>
+            <p class="idcard__sub">旁观喜事，静候因果</p>
+            <div class="idcard__figure"><img class="portrait" src="assets/char-grandma.png" alt="村民" /></div>
+            <div class="idcard__section">
+              <h4>壹 · 今 夜 之 事</h4>
+              <p style="margin:0;text-align:center;letter-spacing:.3em;color:#75574a;font:15px var(--font-display)">暂 · 无 · 任 · 务</p>
+            </div>
+            <div class="idcard__section">
+              <div class="reward"><div class="reward__seal">赏</div>
+                <p>凭身份卡向工作人员领取参与奖励</p>
+              </div>
+            </div>
+            <p class="idcard__note">此 签 仅 本 轮 有 效 · 请 勿 示 于 他 人</p>
+          </article>
+        </div>
+
+        <!-- ---------- 本轮签尽 ---------- -->
+        <div data-sc="full" class="state">
+          <div class="papercut"><img src="assets/papercut-cry.png" alt="" /></div>
+          <h2>本轮签尽</h2>
+          <p>此轮身份均已有主，请等待工作人员开新一轮。</p>
+          <div class="ribbon"><span>第 2 轮</span><b>8 / 8</b><span>已封签</span></div>
+          <button class="btn btn--ghost">查 看 新 轮</button>
+        </div>
+
+      </div>
+      <div class="seal"><i>囍</i></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const screen = document.querySelector('.screen')
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      screen.dataset.state = btn.dataset.goto
+      document.querySelectorAll('[data-goto]').forEach(b => b.classList.toggle('on', b === btn))
+    })
+  })
+</script>
+</body>
+</html>

@@ -48,7 +48,16 @@ ALTER TABLE game_rounds DROP COLUMN IF EXISTS round_mode;
 
 -- ---------------------------------------------------------------- 身份模板不再按人数区分
 -- 只保留一套模板：沿用原 5 人局那套文案，管理员可在后台「身份内容」里修改
-DELETE FROM role_templates WHERE round_mode = 'EIGHT';
+-- 注意：必须先判断 round_mode 列是否还在——线上库曾用 docs/manual-v3-migration.sql
+-- 手工执行过本迁移，那时这一列已经被删掉，再无条件 DELETE 就会报
+--   ERROR: column "round_mode" does not exist
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'public' AND table_name = 'role_templates' AND column_name = 'round_mode') THEN
+        DELETE FROM role_templates WHERE round_mode = 'EIGHT';
+    END IF;
+END $$;
 ALTER TABLE role_templates DROP CONSTRAINT IF EXISTS ux_template_mode_role;
 ALTER TABLE role_templates DROP CONSTRAINT IF EXISTS ck_template_mode;
 ALTER TABLE role_templates DROP COLUMN IF EXISTS round_mode;
