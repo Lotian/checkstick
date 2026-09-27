@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isCompleteGroupCode, normalizeGroupCode, resolveStoredGroupCode } from './code'
+import { isCompleteGroupCode, normalizeGroupCode } from './code'
 
 describe('normalizeGroupCode（输入框实时清洗）', () => {
   it('纯数字输入：去空白并最多保留前 4 位', () => {
@@ -34,22 +34,5 @@ describe('isCompleteGroupCode', () => {
     expect(isCompleteGroupCode('10245')).toBe(false)
     expect(isCompleteGroupCode('RR98DN')).toBe(false)
     expect(isCompleteGroupCode('')).toBe(false)
-  })
-})
-
-describe('resolveStoredGroupCode（localStorage 历史值迁移）', () => {
-  it('沿用本来就是 4 位数字的历史值', () => {
-    expect(resolveStoredGroupCode('1024')).toBe('1024')
-    expect(resolveStoredGroupCode('  1024  ')).toBe('1024')
-    expect(resolveStoredGroupCode('0000')).toBe('0000')
-  })
-
-  it('丢弃旧版 6 位码与残缺值，避免显示半截数字', () => {
-    expect(resolveStoredGroupCode('RR98DN')).toBe('')
-    expect(resolveStoredGroupCode('98')).toBe('')
-    expect(resolveStoredGroupCode('10245')).toBe('')
-    expect(resolveStoredGroupCode('')).toBe('')
-    expect(resolveStoredGroupCode(null)).toBe('')
-    expect(resolveStoredGroupCode(undefined)).toBe('')
   })
 })

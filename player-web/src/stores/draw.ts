@@ -1,47 +1,36 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, errorMessage } from '@/api/client'
-import { isCompleteGroupCode, normalizeGroupCode, resolveStoredGroupCode } from '@/utils/code'
+import { isCompleteGroupCode, normalizeGroupCode } from '@/utils/code'
 import { getVisitorId } from '@/utils/visitor'
 import type { DrawResult, PublicGroupState } from '@/types'
 
-const GROUP_KEY = 'xiqian.group-code'
+/** 早期版本用来「记住上次输入过的组局码」的 localStorage 键，现已废弃。 */
+const LEGACY_GROUP_KEY = 'xiqian.group-code'
 
 /**
- * 读取历史组局码（兼容禁用 localStorage 的浏览器环境）。
+ * 组局码不在本地记忆，每次进来都是空输入框。
  *
- * 只沿用「本身就是完整 4 位数字码」的值：旧版 6 位字母数字码（如 RR98DN）整体丢弃。
- * 早先这里用了 normalizeGroupCode，会把 RR98DN 剔成 "98" 当成用户已输入的内容，
- * 导致入局页输入框默认显示 "98"。
+ * 二维码固定不变，玩家每次扫码后都必须自己输入桌上告知的组局码。一旦预填，
+ * 玩家看到的就是上一个局的码（例如 5698），既有串局风险，也会让人误以为
+ * 那是系统给的默认值。
  *
- * 另外顺手清掉无效的历史值（自愈）：否则每次打开页面都要再判断一次，
- * 而且用户永远带着一份用不上的脏数据。
+ * 早期版本会把码写进 localStorage 并在下次进入时预填输入框，
+ * 所以这里做一次清理，把残留在老用户手机里的数据删掉。
  */
-function storedGroupCode(): string {
+function forgetLegacyGroupCode() {
   try {
-    const stored = localStorage.getItem(GROUP_KEY)
-    const valid = resolveStoredGroupCode(stored)
-    if (stored !== null && valid === '') {
-      localStorage.removeItem(GROUP_KEY)
-    }
-    return valid
+    localStorage.removeItem(LEGACY_GROUP_KEY)
   } catch {
-    // 隐私模式等禁用 localStorage 的环境：当作没有历史值，本次会话仍可正常入局。
-    return ''
-  }
-}
-
-function rememberGroupCode(code: string) {
-  try {
-    localStorage.setItem(GROUP_KEY, code)
-  } catch {
-    // 记忆失败不影响本次入局，用户刷新后重新输入即可。
+    // 隐私模式等禁用 localStorage 的环境：本来就没存进去，忽略即可。
   }
 }
 
 export const useDrawStore = defineStore('draw', () => {
-  // 历史值只接受完整的 4 位数字码，其余（含旧版 6 位码）都当作没存过
-  const groupCode = ref(storedGroupCode())
+  forgetLegacyGroupCode()
+
+  // 空字符串起步：组局码只能由玩家自己输入
+  const groupCode = ref('')
   const state = ref<PublicGroupState | null>(null)
   const result = ref<DrawResult | null>(null)
   const loading = ref(false)
@@ -71,7 +60,6 @@ export const useDrawStore = defineStore('draw', () => {
       })
       if (requestSequence !== joinSequence) return
       groupCode.value = normalized
-      rememberGroupCode(normalized)
       state.value = response.data
       result.value = response.data.result
     } catch (caught) {
@@ -118,6 +106,8 @@ export const useDrawStore = defineStore('draw', () => {
     state.value = null
     result.value = null
     error.value = ''
+    // 连组局码一起清掉：回到入局页就是全空的，不会顺手把上一个局带回来
+    groupCode.value = ''
   }
 
   return { groupCode, state, result, loading, drawing, error, hasJoined, canDraw, join, draw, leave }

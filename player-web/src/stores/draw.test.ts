@@ -4,7 +4,8 @@ import { api } from '@/api/client'
 import type { PublicGroupState } from '@/types'
 import { useDrawStore } from './draw'
 
-const GROUP_KEY = 'xiqian.group-code'
+/** 早期版本用来记忆组局码的 localStorage 键；现在只应被清理，不应再被写入。 */
+const LEGACY_GROUP_KEY = 'xiqian.group-code'
 
 vi.mock('@/api/client', () => ({
   api: { get: vi.fn(), post: vi.fn() },
@@ -15,7 +16,7 @@ vi.mock('@/utils/visitor', () => ({
   getVisitorId: () => 'a6bb7fd0-34a3-4c2f-8c7e-46276669a641',
 }))
 
-/** 造一个可控的 localStorage，用于验证历史组局码的迁移行为。 */
+/** 造一个可控的 localStorage，用于确认历史组局码既不被读取也不再被写入。 */
 function stubLocalStorage(initial: Record<string, string>) {
   const map = new Map(Object.entries(initial))
   vi.stubGlobal('localStorage', {
@@ -80,27 +81,45 @@ describe('玩家入局状态', () => {
     expect(store.state?.groupName).toBe('二号厅')
   })
 
-  // 回归：入局页输入框曾默认显示 "98"——旧版 6 位码 RR98DN 被抠出了数字
-  describe('历史组局码迁移', () => {
-    it('丢弃旧版 6 位字母数字码，输入框初值为空并清掉脏数据', () => {
-      const map = stubLocalStorage({ [GROUP_KEY]: 'RR98DN' })
+  // 回归：入局页输入框曾自动带出上一次用过的组局码（线上表现为默认显示 5698）
+  describe('组局码不预填、不落地', () => {
+    it('手机里还留着上次的组局码时，输入框初值仍为空，并清掉这份残留数据', () => {
+      const map = stubLocalStorage({ [LEGACY_GROUP_KEY]: '5698' })
 
       const store = useDrawStore()
 
       expect(store.groupCode).toBe('')
-      expect(map.has(GROUP_KEY)).toBe(false)
+      expect(map.has(LEGACY_GROUP_KEY)).toBe(false)
     })
 
-    it('丢弃被抠剩的半截数字', () => {
-      stubLocalStorage({ [GROUP_KEY]: '98' })
+    it('旧版 6 位字母数字码同样不会被带出来（曾显示成 98）', () => {
+      const map = stubLocalStorage({ [LEGACY_GROUP_KEY]: 'RR98DN' })
 
       expect(useDrawStore().groupCode).toBe('')
+      expect(map.has(LEGACY_GROUP_KEY)).toBe(false)
     })
 
-    it('沿用本身就是完整的 4 位数字码', () => {
-      stubLocalStorage({ [GROUP_KEY]: '1024' })
+    it('成功入局后也不会把组局码写回本地存储', async () => {
+      const map = stubLocalStorage({})
+      vi.mocked(api.get).mockResolvedValueOnce({ data: groupState('5698', '一号厅') } as never)
+      const store = useDrawStore()
 
-      expect(useDrawStore().groupCode).toBe('1024')
+      await store.join('5698')
+
+      expect(store.groupCode).toBe('5698')
+      expect(map.size).toBe(0)
+    })
+
+    it('离开组局后组局码被清空，再进来自动重填的隐患一并消失', async () => {
+      stubLocalStorage({})
+      vi.mocked(api.get).mockResolvedValueOnce({ data: groupState('5698', '一号厅') } as never)
+      const store = useDrawStore()
+
+      await store.join('5698')
+      store.leave()
+
+      expect(store.groupCode).toBe('')
+      expect(store.state).toBeNull()
     })
   })
 })
