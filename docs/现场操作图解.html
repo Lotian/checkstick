@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>囍签 · 现场操作图解</title>
+<style>
+  :root {
+    --red: #b3202a;
+    --red-soft: #f6e7e6;
+    --gold: #a8802c;
+    --ink: #241a18;
+    --muted: #6f625c;
+    --line: #e3d9cd;
+    --paper: #fbf8f3;
+    --dark: #170d0f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #efe9e0;
+    color: var(--ink);
+    font: 15px/1.75 "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+  }
+  .page { max-width: 1080px; margin: 0 auto; background: var(--paper); }
+  .pad { padding: 34px 42px; }
+
+  /* ---------------- 封面 ---------------- */
+  .cover {
+    background: linear-gradient(150deg, #2a1013, #150a0c 60%);
+    color: #f3e6d3;
+    padding: 46px 42px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '囍';
+    position: absolute;
+    right: 34px;
+    top: 18px;
+    font: 150px/1 "Songti SC", serif;
+    color: rgb(233 180 100 / 12%);
+  }
+  .cover h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: .12em; }
+  .cover p { margin: 0; color: #cbb79c; }
+  .cover .who { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .cover .who span {
+    border: 1px solid rgb(233 180 100 / 45%);
+    color: #e3c48f;
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+  }
+
+  /* ---------------- 通用排版 ---------------- */
+  section { border-top: 1px solid var(--line); }
+  h2 {
+    margin: 0 0 6px;
+    font-size: 23px;
+    letter-spacing: .04em;
+  }
+  h2 .no {
+    display: inline-grid;
+    place-items: center;
+    width: 30px; height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    font-size: 15px;
+    vertical-align: 2px;
+  }
+  h3 { margin: 26px 0 8px; font-size: 17px; color: var(--red); }
+  h4 { margin: 18px 0 6px; font-size: 15px; }
+  .lead { margin: 0 0 18px; color: var(--muted); }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code {
+    background: #efe6da;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font: 13px/1.6 ui-monospace, Consolas, monospace;
+    color: #7d2b22;
+  }
+  b.mark { background: linear-gradient(transparent 62%, #ffe08a 62%); }
+  .tip {
+    margin: 14px 0;
+    padding: 12px 16px;
+    border-left: 4px solid var(--gold);
+    background: #fdf6e6;
+    font-size: 14px;
+  }
+  .warn {
+    margin: 14px 0;
+    padding: 12px 16px;
+    border-left: 4px solid var(--red);
+    background: var(--red-soft);
+    font-size: 14px;
+  }
+
+  /* ---------------- 全景图 ---------------- */
+  .map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0 8px; }
+  .map .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    background: #fff;
+  }
+  .map .card .icon { font-size: 30px; line-height: 1; }
+  .map .card h4 { margin: 10px 0 4px; font-size: 16px; }
+  .map .card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .map .card .k {
+    display: inline-block;
+    margin-top: 10px;
+    background: var(--red-soft);
+    color: var(--red);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12.5px;
+  }
+
+  /* ---------------- 流程条 ---------------- */
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin: 16px 0; }
+  .flow .step {
+    flex: 1 1 150px;
+    min-width: 150px;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    border-radius: 10px;
+    background: #fff;
+    padding: 12px 14px;
+  }
+  .flow .step em { display: block; font-style: normal; font-size: 12px; color: var(--gold); letter-spacing: .1em; }
+  .flow .step strong { display: block; margin: 4px 0; font-size: 15px; }
+  .flow .step span { font-size: 12.5px; color: var(--muted); }
+  .flow .arrow { align-self: center; color: #c9b8a4; font-size: 20px; }
+
+  /* ---------------- 手机样机 ---------------- */
+  .screens { display: flex; flex-wrap: wrap; gap: 22px; margin: 18px 0; }
+  .screen-item { width: 252px; }
+  .phone {
+    border: 8px solid #241416;
+    border-radius: 26px;
+    background: #150c0d;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
+    padding: 12px 10px 16px;
+    color: #efe0cb;
+    min-height: 400px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone .notch {
+    width: 62px; height: 5px; border-radius: 4px;
+    background: #3a2427; margin: 0 auto 12px;
+  }
+  .screen-item > .cap { margin-top: 10px; font-size: 13.5px; }
+  .screen-item > .cap strong { display: block; color: var(--red); font-size: 15px; }
+  .screen-item > .cap span { color: var(--muted); }
+
+  .p-brand { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #c79a5c; }
+  .p-brand i {
+    display: grid; place-items: center;
+    width: 24px; height: 24px; border: 1px solid #e9b464; border-radius: 4px;
+    font-style: normal; color: #e9b464;
+  }
+  .p-kicker { margin: 16px 0 0; font-size: 10px; letter-spacing: .3em; color: #c79a5c; }
+  .p-title { margin: 8px 0 4px; font: 700 22px/1.2 "Songti SC", serif; color: #f4e8d6; letter-spacing: .1em; }
+  .p-sub { margin: 0 0 12px; font-size: 12px; color: #e9b464; }
+  .p-text { margin: 0; font-size: 11px; line-height: 1.85; color: #ded0bb; }
+  .p-note {
+    margin-top: 12px; padding: 8px 10px;
+    border-left: 2px solid #a83a3b; background: rgb(106 21 26 / 25%);
+    font-size: 10.5px; color: #bba890;
+  }
+  .p-note b { display: block; color: #d6a65f; font-size: 10px; letter-spacing: .18em; }
+  .p-btn {
+    display: block; margin-top: 14px; padding: 11px;
+    background: linear-gradient(180deg, #c22a30, #971d24);
+    border-radius: 6px; text-align: center;
+    color: #ffeede; font-size: 13px; letter-spacing: .2em;
+  }
+  .p-btn.ghost { background: transparent; border: 1px solid #7d5c3a; color: #d8bf95; }
+  .p-hint { margin: 8px 0 0; text-align: center; font-size: 10px; color: #7e6c5c; }
+  .p-code { display: flex; gap: 8px; justify-content: center; margin: 14px 0 0; }
+  .p-code i {
+    display: grid; place-items: center;
+    width: 40px; height: 50px; border: 1px solid #8a6b44; border-radius: 6px;
+    font-style: normal; font-size: 22px; color: #f0dcbb;
+  }
+  .p-code i.empty { color: #5c4a3b; }
+  .p-card {
+    margin-top: 12px; padding: 14px 12px;
+    border: 1px solid #8a6b44; border-radius: 4px;
+    background: linear-gradient(180deg, rgb(30 14 16 / 92%), rgb(12 6 7 / 96%));
+  }
+  .p-card .role { margin: 6px 0 0; text-align: center; font: 700 24px/1.2 "Songti SC", serif; color: #f4e8d6; letter-spacing: .16em; }
+  .p-card .role-sub { margin: 4px 0 10px; text-align: center; font-size: 11px; color: #c79a5c; }
+  .p-card .fig {
+    height: 92px; border: 1px solid #6d5233;
+    background: repeating-linear-gradient(45deg, #2b1a18, #2b1a18 8px, #33201e 8px, #33201e 16px);
+    display: grid; place-items: center; color: #7a6350; font-size: 10px;
+  }
+  .p-sec { margin-top: 10px; border-top: 1px solid rgb(233 180 100 / 22%); padding-top: 8px; }
+  .p-sec h5 { margin: 0 0 6px; font-size: 10.5px; color: #e9b464; letter-spacing: .16em; }
+  .p-sec p { margin: 0; font-size: 10.5px; color: #ded0bb; line-height: 1.7; }
+  .p-sec .none { text-align: center; letter-spacing: .3em; color: #c79a5c; font-size: 12px; }
+  .p-foot { margin: 10px 0 0; text-align: center; font-size: 9.5px; color: #7e6c5c; letter-spacing: .12em; }
+  .p-ribbon {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    margin-top: 12px; padding: 7px 9px;
+    border: 1px solid #6d5233; border-radius: 4px;
+    background: rgb(0 0 0 / 30%); font-size: 10px; color: #cbb79c;
+  }
+  .p-ribbon b { color: #f0dcbb; font-size: 12px; }
+  .p-ribbon .chg { border: 0; background: none; color: #c79a5c; font-size: 10px; text-decoration: underline; padding: 0; }
+
+  /* ---------------- 浏览器样机 ---------------- */
+  .browser {
+    border: 1px solid #cdbfae;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    margin: 16px 0;
+  }
+  .browser .bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: #ece4d8; border-bottom: 1px solid #d9cbba;
+    font-size: 12px; color: #6f625c;
+  }
+  .browser .bar i { width: 10px; height: 10px; border-radius: 50%; background: #c9b8a4; }
+  .browser .body { display: flex; min-height: 300px; }
+  .rail {
+    width: 210px; flex: 0 0 210px;
+    background: #1b0f11; color: #d9c9b2; padding: 12px 12px 14px; font-size: 12px;
+  }
+  .rail .brand { display: flex; gap: 8px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #3a2427; }
+  .rail .brand i {
+    display: grid; place-items: center; width: 26px; height: 26px;
+    border: 1px solid #e9b464; color: #e9b464; font-style: normal; border-radius: 3px;
+  }
+  .rail .brand b { display: block; font-size: 13px; color: #f0dcbb; }
+  .rail .brand small { color: #8d7a6a; font-size: 10px; }
+  .rail .head { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 8px; color: #8d7a6a; font-size: 10.5px; }
+  .rail .head b { border: 1px solid #6d5233; border-radius: 3px; width: 18px; height: 18px; display: grid; place-items: center; color: #d8bf95; font-size: 12px; }
+  .rail .g { padding: 7px 8px; border-radius: 5px; margin-bottom: 6px; background: #2a1a1c; }
+  .rail .g.on { background: #3d1418; border-left: 3px solid #c22a30; }
+  .rail .g em { display: block; font-style: normal; color: #e9b464; font-size: 13px; letter-spacing: .08em; }
+  .rail .g strong { display: block; font-size: 12.5px; color: #f0dcbb; }
+  .rail .g small { color: #8d7a6a; font-size: 10.5px; }
+  .rail .acts { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .rail .acts span { border: 1px solid #6d5233; border-radius: 4px; padding: 4px 8px; font-size: 11px; color: #d8bf95; }
+  .main { flex: 1; padding: 14px 16px; background: #fbf8f3; min-width: 0; }
+  .main .top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+  .main .top h5 { margin: 0; font-size: 16px; }
+  .main .top .code { text-align: right; font-size: 11px; color: var(--muted); }
+  .main .top .code b { display: block; font-size: 17px; color: var(--red); letter-spacing: .1em; }
+  .main .cmd { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; font-size: 12.5px; }
+  .main .cmd .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .main .cmd .btns span { border-radius: 5px; padding: 5px 10px; font-size: 12px; border: 1px solid var(--line); background: #fff; }
+  .main .cmd .btns span.pri { background: #b3202a; border-color: #b3202a; color: #fff; }
+  .main .cmd .btns span.warn { background: #fdf3e3; border-color: #e6cfa4; color: #8a6218; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+  .stats div { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 8px 10px; }
+  .stats em { display: block; font-style: normal; font-size: 11px; color: var(--muted); }
+  .stats b { font-size: 19px; }
+  .grid2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; }
+  .panel { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px 12px; }
+  .panel h6 { margin: 0 0 6px; font-size: 12.5px; color: var(--red); }
+  .panel p { margin: 0; font-size: 12px; color: var(--muted); }
+  .bar-track { height: 8px; background: #efe6da; border-radius: 5px; overflow: hidden; margin: 8px 0 4px; }
+  .bar-fill { height: 100%; width: 40%; background: linear-gradient(90deg, #c22a30, #e0a13c); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; background: #fff; }
+  table.tbl th, table.tbl td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.tbl th { background: #f3ece1; font-weight: 600; }
+  .tag-num {
+    display: inline-grid; place-items: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--red); color: #fff; font-size: 12px; margin-right: 6px;
+  }
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { border-bottom: 1px dashed var(--line); padding: 9px 0 9px 30px; position: relative; }
+  .checklist li::before {
+    content: '□'; position: absolute; left: 4px; top: 7px; color: var(--red); font-size: 17px;
+  }
+  footer { padding: 22px 42px 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 860px) {
+    .pad { padding: 22px 16px; }
+    .cover { padding: 30px 18px; }
+    .map, .grid2 { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .browser .body { flex-direction: column; }
+    .rail { width: auto; flex: none; }
+  }
+  @media print {
+    body { background: #fff; }
+    .page { max-width: none; }
+    section { break-inside: avoid; }
+    .screens, .map, .flow { break-inside: avoid; }
+    .cover { background: #fff; color: #000; border-bottom: 3px solid var(--red); }
+    .cover::after { display: none; }
+    .cover p, .cover .who span { color: #444; border-color: #999; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cover">
+    <h1>囍签 · 现场操作图解</h1>
+    <p>给完全没用过的人看的一页纸：谁做什么、玩家看到什么、后台点哪里。</p>
+    <div class="who">
+      <span>玩家端 = 玩家手机上打开的页面</span>
+      <span>管理端 = 工作人员电脑上开着的工作台</span>
+      <span>一台服务器把两边连起来</span>
+    </div>
+  </header>
+
+  <!-- ============ 0 全景 ============ -->
+  <section class="pad">
+    <h2><span class="no">0</span>先看懂这一张图</h2>
+    <p class="lead">整套东西只有三个角色、一条主线。看懂这三个框，后面全是细节。</p>
+
+    <div class="map">
+      <div class="card">
+        <div class="icon">📱</div>
+        <h4>玩家：扫码 → 抽身份</h4>
+        <p>用手机扫海报上的二维码，先读故事，再输入<b class="mark">桌面立牌上的 4 位数字</b>，然后亲手点「启签」抽一个身份，把身份卡拿给工作人员看。</p>
+        <span class="k">他只需要会：扫码 + 输 4 个数字 + 点按钮</span>
+      </div>
+      <div class="card">
+        <div class="icon">🖥️</div>
+        <h4>工作人员：开轮 → 发身份</h4>
+        <p>在电脑上打开管理端，选好这一桌，点「开新轮」放出一批签。看着实时进度，人够了可以「提前封签」，人满会自动封签。</p>
+        <span class="k">他只需要会：开机→登录→开新轮→看数字</span>
+      </div>
+      <div class="card">
+        <div class="icon">⚙️</div>
+        <h4>后台内容：故事 + 身份卡文字</h4>
+        <p>故事简介（玩家开场读到的那段）、每个身份的任务和奖励，都在管理端里改，改完玩家刷新就能看到。<b class="mark">不用改代码、不用重启</b>。</p>
+        <span class="k">改文字：故事简介 / 身份内容</span>
+      </div>
+    </div>
+
+    <div class="tip">
+      <b>三句话记住整个系统：</b><br />
+      ① 海报上的二维码<b>永远是同一个</b>，不用换。<br />
+      ② 每张桌子有一个<b>固定的 4 位数字组局码</b>，写在桌面立牌上，玩家要自己输入。<br />
+      ③ 一「轮」就是一批签，签抽完了（或工作人员提前封签）就得<b>开新轮</b>，玩家才能继续抽。
+    </div>
+  </section>
+
+  <!-- ============ 1 全流程 ============ -->
+  <section class="pad">
+    <h2><span class="no">1</span>从头到尾会发生什么</h2>
+    <p class="lead">按时间顺序，左边是工作人员做的事，右边对应的就是玩家看到的东西。</p>
+
+    <div class="flow">
+      <div class="step"><em>开场前</em><strong>建组局</strong><span>后台新建「红轿局」，系统给一个 4 位数字组局码</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>开场前</em><strong>布置现场</strong><span>海报贴二维码，桌面立牌写组局码，后台点「打印二维码」</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>开始前 1 分钟</em><strong>开新轮</strong><span>点「开新轮」，一批签就发出来了</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>现场</em><strong>玩家扫码抽签</strong><span>读故事 → 输组局码 → 点「启签」→ 得到身份卡</span></div>
+    </div>
+    <div class="flow">
+      <div class="step"><em>现场</em><strong>工作人员看进度</strong><span>已落签数字自己往上跳，新郎/新娘是否已出也看得到</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>人够了</em><strong>提前封签（可选）</strong><span>抽满最低人数后，可以不等满员直接封签</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>人满了</em><strong>自动封签</strong><span>抽满最高人数，系统自己封，玩家看到「本轮签尽」</span></div>
+      <div class="arrow">▶</div>
+      <div class="step"><em>下一批</em><strong>再点开新轮</strong><span>玩家点「查看新轮」就能继续抽</span></div>
+    </div>
+
+    <div class="warn">
+      <b>人数规则（只有这一条，记住就行）：</b><br />
+      签位数量 = 后台设的<b>最高人数</b>（比如设 5~8 人，就准备 8 支签）。<br />
+      抽满<b>最低人数</b>（5 人）后，「提前封签」按钮才会亮起来。<br />
+      抽满<b>最高人数</b>（8 人）时，系统会自动封签。
+    </div>
+  </section>
+
+  <!-- ============ 2 玩家端 ============ -->
+  <section class="pad">
+    <h2><span class="no">2</span>玩家端：他手机上会依次看到这 6 个画面</h2>
+    <p class="lead">下面每一屏都是按真实界面画的。如果玩家说「我看不到 xxx」，对照这里就能知道卡在哪一屏。</p>
+
+    <div class="screens">
+      <!-- 1 故事简介 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-brand"><i>囍</i><span>纸 上 姻 缘 · 一 签 入 局</span></div>
+          <p class="p-kicker">今 夜 · 入 戏</p>
+          <p class="p-title">纸嫁衣</p>
+          <p class="p-sub">这一次，换你走进故事里</p>
+          <p class="p-text">樊铃村，一座被冥婚诅咒困住的村子……<br />（这段就是后台「故事简介」里填的内容，<b class="mark">你怎么换行，这里就怎么换行</b>）</p>
+          <div class="p-note"><b>入场须知</b>本惊奇屋含惊吓与追逐，1.2 米以下儿童……</div>
+          <div class="p-btn">下 一 步</div>
+          <p class="p-hint">继续即表示已阅读并知悉入场须知</p>
+        </div>
+        <div class="cap"><strong>① 故事简介</strong><span>扫码后第一屏。玩家在这里读故事和入场须知，点「下 一 步」进入。</span></div>
+      </div>
+
+      <!-- 2 输组局码 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-brand"><i>囍</i><span>纸 上 姻 缘 · 一 签 入 局</span></div>
+          <p class="p-kicker">寻 局</p>
+          <p class="p-title" style="font-size:19px">请录组局暗号</p>
+          <p class="p-text">四字为引，寻得今夜属于你的那一桌。</p>
+          <div class="p-code"><i class="empty">·</i><i class="empty">·</i><i class="empty">·</i><i class="empty">·</i></div>
+          <div class="p-btn">推 门 入 局</div>
+          <p class="p-hint">桌面立牌上有四位数字组局码</p>
+        </div>
+        <div class="cap"><strong>② 输入组局码</strong><span>输满 4 位数字，「推 门 入 局」才亮。<b>框里永远是空的</b>，不会自动帮你填上次的码。</span></div>
+      </div>
+
+      <!-- 3 等待开轮 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-ribbon"><button class="chg">更换组局</button><span><b>2226</b> 红轿局</span><span>尚未开签</span></div>
+          <p class="p-title" style="margin-top:60px;text-align:center;font-size:20px">吉时未至</p>
+          <p class="p-text" style="text-align:center">工作人员尚未开新一轮，请在厅内稍候。</p>
+          <div class="p-btn ghost">再 探 一 次</div>
+        </div>
+        <div class="cap"><strong>③ 还没开轮</strong><span>玩家输入了正确的组局码，但工作人员还没点「开新轮」。让玩家点「再 探 一 次」或稍等。</span></div>
+      </div>
+
+      <!-- 4 抽签 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-ribbon"><button class="chg">更换组局</button><span><b>2226</b> 红轿局</span><span>第 2 轮 · 余 4 签</span></div>
+          <p class="p-title" style="margin-top:70px;text-align:center;font-size:22px">一签入命</p>
+          <p class="p-text" style="text-align:center">命签未启，请亲手揭开今夜身份。</p>
+          <div class="p-btn">启 签</div>
+          <p class="p-hint">正在为你抽取身份</p>
+        </div>
+        <div class="cap"><strong>④ 抽签</strong><span>顶部一直显示「第几轮 · 余几签」。玩家亲手点「启 签」，会转 1~2 秒的「签意流转」动画。</span></div>
+      </div>
+
+      <!-- 5 身份卡 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-ribbon"><button class="chg">更换组局</button><span><b>2226</b> 红轿局</span><span>第 2 轮 · 余 4 签</span></div>
+          <div class="p-card">
+            <p style="margin:0;text-align:center;font-size:9px;color:#c79a5c;letter-spacing:.2em">红纸落名 · 命数已定</p>
+            <p class="role">村民</p>
+            <p class="role-sub">旁观喜事，静候因果</p>
+            <div class="fig">身份形象图</div>
+            <div class="p-sec">
+              <h5>壹　今夜之事</h5>
+              <p class="none">暂 · 无 · 任 · 务</p>
+            </div>
+            <p class="p-foot">此 签 仅 本 轮 有 效</p>
+          </div>
+        </div>
+        <div class="cap"><strong>⑤ 身份卡（村民）</strong><span>村民没有任务、<b>也没有「线下赏礼」这一栏</b>，最后一行永远保留「此签仅本轮有效」。</span></div>
+      </div>
+
+      <!-- 6 新郎卡 -->
+      <div class="screen-item">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="p-ribbon"><button class="chg">更换组局</button><span><b>2226</b> 红轿局</span><span>第 2 轮 · 余 4 签</span></div>
+          <div class="p-card">
+            <p style="margin:0;text-align:center;font-size:9px;color:#c79a5c;letter-spacing:.2em">红纸落名 · 命数已定</p>
+            <p class="role">新郎</p>
+            <p class="role-sub">红线相牵，照签行事</p>
+            <div class="fig">身份形象图</div>
+            <div class="p-sec">
+              <h5>壹　今夜之事</h5>
+              <p>01　找到新娘并完成合影<br />02　向工作人员说出指定暗号</p>
+            </div>
+            <div class="p-sec">
+              <h5>赏　线下赏礼</h5>
+              <p>完成任务后，凭身份卡向工作人员领取奖励</p>
+            </div>
+            <p class="p-foot">此 签 仅 本 轮 有 效</p>
+          </div>
+        </div>
+        <div class="cap"><strong>⑥ 身份卡（新郎/新娘）</strong><span>有任务清单、有「线下赏礼」。任务里的换行，在后台是<b>一行一步</b>，这里就变成一个编号一条。</span></div>
+      </div>
+    </div>
+
+    <h3>另外两屏：签没了怎么办</h3>
+    <div class="screens">
+      <div class="screen-item">
+        <div class="phone" style="min-height:250px">
+          <div class="notch"></div>
+          <p class="p-title" style="margin-top:50px;text-align:center;font-size:20px">本轮签尽</p>
+          <p class="p-text" style="text-align:center">此轮身份均已有主，请等待工作人员开新一轮。</p>
+          <div class="p-btn ghost">查 看 新 轮</div>
+        </div>
+        <div class="cap"><strong>抽满最高人数</strong><span>系统自动封签后，后面来的玩家看到这个。工作人员开新轮后，玩家点「查 看 新 轮」即可。</span></div>
+      </div>
+      <div class="screen-item">
+        <div class="phone" style="min-height:250px">
+          <div class="notch"></div>
+          <p class="p-title" style="margin-top:50px;text-align:center;font-size:20px">本轮已封签</p>
+          <p class="p-text" style="text-align:center">本轮已经结束，请等待工作人员开启下一轮。</p>
+          <div class="p-btn ghost">查 看 新 轮</div>
+        </div>
+        <div class="cap"><strong>工作人员提前封签</strong><span>人还没满但工作人员点了「提前封签」，玩家看到这个。同样等开新轮。</span></div>
+      </div>
+      <div class="screen-item">
+        <div class="phone" style="min-height:250px">
+          <div class="notch"></div>
+          <p class="p-title" style="margin-top:44px;text-align:center;font-size:19px">请录组局暗号</p>
+          <div class="p-code"><i>9</i><i>8</i><i class="empty">·</i><i class="empty">·</i></div>
+          <div class="p-btn" style="opacity:.5">推 门 入 局</div>
+          <p class="p-note" style="text-align:center">请输入完整的4位数字组局码</p>
+        </div>
+        <div class="cap"><strong>码输错了 / 输少了</strong><span>不满 4 位时按钮点不动；输了一个不存在的码，会提示找不到这一局。<b>让玩家核对立牌上的数字</b>。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 管理端 ============ -->
+  <section class="pad">
+    <h2><span class="no">3</span>管理端：一块屏幕分成 6 个区域</h2>
+    <p class="lead">工作人员电脑上打开的就是这个。下面是按真实界面画的示意，每一个框对应下面的编号说明。</p>
+
+    <div class="browser">
+      <div class="bar"><i></i><i></i><i></i><span>管理端地址（记在浏览器收藏夹里，别手打）</span></div>
+      <div class="body">
+        <aside class="rail">
+          <div class="brand"><i>囍</i><span><b>囍签</b><small>现场控签台</small></span></div>
+          <div class="head"><span>进行中的组局</span><b>＋</b></div>
+          <div class="g on"><em>2226</em><strong>红轿局</strong><small>0/5 · 第 3 轮</small></div>
+          <div class="g"><em>9638</em><strong>固定组局</strong><small>0/8 · 第 1 轮</small></div>
+          <div class="g"><em>5480</em><strong>测试</strong><small>5~8 人 · 尚未开轮</small></div>
+          <div class="acts"><span>故事简介</span><span>身份内容</span><span>历史轮次</span></div>
+        </aside>
+        <div class="main">
+          <div class="top">
+            <h5>红轿局</h5>
+            <div class="code">玩家组局码<b>2226</b></div>
+          </div>
+          <div class="cmd">
+            <span>● 第 3 轮 · 本局 5~8 人</span>
+            <span class="btns"><span class="warn">提前封签（需满5人）</span><span class="pri">开新轮（5~8人）</span><span>组局设置 ▾</span></span>
+          </div>
+          <div class="stats">
+            <div><em>已落签</em><b>3</b></div>
+            <div><em>余签</em><b>5</b></div>
+            <div><em>新郎</em><b style="color:#b3202a">已出</b></div>
+            <div><em>新娘</em><b>未出</b></div>
+          </div>
+          <div class="grid2">
+            <div class="panel">
+              <h6>实时进度 · 本轮落签录</h6>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+              <p>还需 2 人达到封签条件<br /><small>实时同步 · 断线会自动恢复</small></p>
+            </div>
+            <div class="panel">
+              <h6>玩家扫码处</h6>
+              <div style="height:74px;background:repeating-linear-gradient(45deg,#efe6da,#efe6da 6px,#e5d9c8 6px,#e5d9c8 12px);border-radius:6px;display:grid;place-items:center;color:#8d7a6a;font-size:11px">固定二维码</div>
+              <p style="margin-top:6px">二维码固定不变，玩家扫码后输入桌面展示的组局码。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>① 左边一列：选哪一桌</h3>
+    <ul>
+      <li>标题「<b>进行中的组局</b>」下面每一条就是一张桌子/一场局。左边 4 位数字是<b>组局码</b>，和桌面立牌上的一致。</li>
+      <li>右上角「<b>＋</b>」= 新建组局。右侧小字 <code>0/5 · 第 3 轮</code> 表示「已经抽了 0 人 / 本轮 5 支签 · 第 3 轮」；写 <code>5~8 人 · 尚未开轮</code> 表示这局还没开轮。</li>
+      <li>点哪一条，右边就切换到那一桌。</li>
+      <li>最下面三个按钮：<b>故事简介</b>（玩家开场那段文字）、<b>身份内容</b>（每个身份的任务和奖励）、<b>历史轮次</b>（查以前的记录）。</li>
+    </ul>
+
+    <h3>② 右上角：玩家组局码</h3>
+    <p>「<b>玩家组局码</b>」下面那个 4 位数字，就是要抄到桌面立牌上的数字。这个码<b>建局时生成，之后不会变</b>。</p>
+
+    <h3>③ 中间一排按钮：现场最常按的</h3>
+    <table class="tbl">
+      <tr><th style="width:190px">按钮</th><th>什么时候按</th><th>玩家那边会看到</th></tr>
+      <tr><td><b>开新轮（5~8人）</b></td><td>每批玩家开始之前按一次。按之前玩家看到的是「吉时未至」。</td><td>抽签界面出现，可以点「启 签」了</td></tr>
+      <tr><td><b>提前封签（需满5人）</b></td><td>人数够了但不想再等。灰着点不动＝还没抽满最低人数。</td><td>变成「本轮已封签」，只能等下一轮</td></tr>
+      <tr><td><b>组局设置 ▾ → 人数区间</b></td><td>改这一桌的最低/最高人数。<b>只影响之后新开的轮</b>，正在进行的轮不变。</td><td>没有变化（下一轮才生效）</td></tr>
+      <tr><td><b>组局设置 ▾ → 停用组局</b></td><td>这一桌今天不用了。停用后「开新轮」按不动，列表里那一行变暗。</td><td>玩家输入这个组局码会被<b>直接拒绝</b>，提示「该组局已经停用」</td></tr>
+    </table>
+
+    <h3>④ 四张数字卡：一眼看现场</h3>
+    <ul>
+      <li><b>已落签</b>：本轮已经被抽走的签数。<b>余签</b>：还剩几支。</li>
+      <li><b>新郎 / 新娘</b>：这两个身份有没有被抽走，什么时候抽走的。用来判断「关键身份都出去了没」。</li>
+      <li>下面的进度条和「还需 N 人达到封签条件」会<b>自动跳动</b>，不用手动刷新。</li>
+    </ul>
+
+    <h3>⑤ 玩家扫码处：打印二维码</h3>
+    <p>这里显示玩家要扫的二维码和地址，点「<b>打印二维码</b>」可以直接打印出来贴海报。<b>二维码是固定的，做一次就行，以后不用换。</b></p>
+
+    <h3>⑥ 最下面：已抽玩家</h3>
+    <p>签序 / 身份 / 游客标识 / 抽取时间，用来核对「这张卡是不是这一轮抽的」。需要留档就点「<b>导出 CSV</b>」（Excel 能打开）。</p>
+  </section>
+
+  <!-- ============ 4 改内容 ============ -->
+  <section class="pad">
+    <h2><span class="no">4</span>改文字：两个抽屉，改完立刻生效</h2>
+    <p class="lead">所有文字都在管理端里改，改完保存，玩家刷新页面就能看到，<b>不需要重启、不需要找人改代码</b>。</p>
+
+    <h3>「故事简介」——玩家开场读到的那一页</h3>
+    <table class="tbl">
+      <tr><th style="width:170px">后台字段</th><th>玩家端位置</th><th>注意</th></tr>
+      <tr><td>标题（必填）</td><td>大标题（现在显示为毛笔字「纸嫁衣」）</td><td>如果标题改成别的名字，大标题会自动变回普通文字</td></tr>
+      <tr><td>副标题</td><td>大标题下面那行金色小字</td><td>—</td></tr>
+      <tr><td>故事简介（必填）</td><td>红色的故事正文</td><td><b>你按回车换行，玩家端就换行</b>；空一行就是空一行</td></tr>
+      <tr><td>安全警告</td><td>「入场须知」那个红框</td><td>同样是换行等于换行</td></tr>
+    </table>
+    <p>改完点右下角「<b>保存故事简介</b>」。玩家<b>刷新页面</b>后生效。</p>
+
+    <h3>「身份内容」——每个身份的任务和奖励</h3>
+    <ul>
+      <li>里面有新郎、新娘、村民三块，每块两个输入框：<b>任务步骤（每行一步）</b> 和 <b>奖励文本</b>。</li>
+      <li>任务步骤：<b>一行就是一条</b>。写两行，玩家卡上就是「01 …」「02 …」两条编号任务。留空则显示「暂·无·任·务」。</li>
+      <li>奖励文本：显示在身份卡的「线下赏礼」里。<b>村民没有赏礼</b>，所以村民卡上不会出现这一栏。</li>
+      <li>改完点「<b>保存全部内容</b>」。重要：<b>开轮时会把当时的内容复制一份到这一轮的签上</b>，所以改内容<b>不影响已经开出去的签</b>，下一轮才用新内容。</li>
+    </ul>
+
+    <div class="tip">
+      <b>什么时候改内容最安全？</b> 两轮之间。这样不会出现「同一轮里有人拿到旧任务、有人拿到新任务」。
+    </div>
+  </section>
+
+  <!-- ============ 5 对照表 ============ -->
+  <section class="pad">
+    <h2><span class="no">5</span>对照速查：后台点了什么 → 玩家看到什么</h2>
+    <table class="tbl">
+      <tr><th style="width:34%">后台动作</th><th style="width:33%">玩家端立刻的变化</th><th>备注</th></tr>
+      <tr><td>新建组局</td><td>无变化</td><td>只是产生一个新的 4 位组局码，还没开轮</td></tr>
+      <tr><td>点「开新轮」</td><td>「吉时未至」→ 变成「一签入命 / 启 签」</td><td>玩家如果停在等待页，点「再探一次」或刷新即可</td></tr>
+      <tr><td>玩家点「启 签」</td><td>身份卡出现</td><td>后台「已落签」+1，并出现在「已抽玩家」表里</td></tr>
+      <tr><td>抽满最高人数</td><td>后来的人看到「本轮签尽」</td><td>系统自动封签</td></tr>
+      <tr><td>点「提前封签」</td><td>后来的人看到「本轮已封签」</td><td>需要有最低人数那么多人才按得动</td></tr>
+      <tr><td>改「故事简介」并保存</td><td>玩家刷新后看到新文案</td><td>已开着的页面需要刷新</td></tr>
+      <tr><td>改「身份内容」并保存</td><td>无变化（本轮已复制的签不改）</td><td>下一轮开出来的签才带新内容</td></tr>
+      <tr><td>改「人数区间」</td><td>无变化</td><td>下一轮生效</td></tr>
+      <tr><td>停用组局</td><td>玩家再输这个组局码会被拒绝：「该组局已经停用」</td><td>停用＝这一桌下线，最安全的"别再进人"开关。想恢复就点「重新启用」</td></tr>
+    </table>
+  </section>
+
+  <!-- ============ 6 检查清单 ============ -->
+  <section class="pad">
+    <h2><span class="no">6</span>开场前 5 分钟，照着打勾</h2>
+    <ul class="checklist">
+      <li>服务器开着：管理端能正常登录（登录页点「登台理签」进得去）。</li>
+      <li>组局建好了：左边列表里有这一桌，名字对、人数区间对。</li>
+      <li><b>组局码抄对了</b>：后台右上角「玩家组局码」的 4 位数字 = 桌面立牌上写的数字。<b>这一条最容易出错。</b></li>
+      <li>二维码：用自己手机扫一次海报上的二维码，能打开故事页。</li>
+      <li>自己人先试一次：抽一张签，确认身份卡上的任务/奖励是你想要的文案。</li>
+      <li>试完之后：让工作人员<b>重新点一次「开新轮」</b>，把试抽的签作废，正式玩家从干净的一轮开始。</li>
+      <li>电脑别关、别锁屏、别切到睡眠；浏览器标签页保持打开。</li>
+      <li>网络：确认现场 WiFi 能给玩家上网（玩家手机走的是现场网络）。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 7 故障 ============ -->
+  <section class="pad">
+    <h2><span class="no">7</span>出问题了？先看这张表</h2>
+    <table class="tbl">
+      <tr><th style="width:32%">现象</th><th style="width:36%">最可能的原因</th><th>怎么办</th></tr>
+      <tr>
+        <td>玩家说「输不进组局码」</td>
+        <td>输到字母了；或者只输了 1~3 位</td>
+        <td>组局码<b>只有 4 位数字</b>。让玩家清空重输，看着立牌一位一位输。</td>
+      </tr>
+      <tr>
+        <td>玩家说「找不到这一局」</td>
+        <td>组局码输错，或后台提前封签/换轮了</td>
+        <td>核对立牌与后台右上角的数字是否一致。</td>
+      </tr>
+      <tr>
+        <td>玩家看到「吉时未至」</td>
+        <td>后台还没点「开新轮」</td>
+        <td>在后台点一次「开新轮（N~M人）」，让玩家点「再探一次」。</td>
+      </tr>
+      <tr>
+        <td>玩家看到「本轮签尽 / 已封签」</td>
+        <td>这一轮结束了</td>
+        <td>点「开新轮」，让玩家点「查看新轮」。</td>
+      </tr>
+      <tr>
+        <td>玩家说提示「该组局已经停用」</td>
+        <td>这一桌在后台被「停用组局」了</td>
+        <td>在后台选中那一桌 →「组局设置 ▾ → 重新启用」。</td>
+      </tr>
+      <tr>
+        <td>后台弹「连接不到现场服务器」</td>
+        <td>电脑与服务器之间断了一下（网络抖动，或服务器正在重启）</td>
+        <td>系统会<b>自动重试 3 次</b>。仍然失败就等几秒再点一次；重新点保存不会丢内容（窗口不会关）。</td>
+      </tr>
+      <tr>
+        <td>后台弹「请先登录管理端」</td>
+        <td>登录超时了</td>
+        <td>刷新页面，用管理员账号重新登录。</td>
+      </tr>
+      <tr>
+        <td>玩家抽完看不到新内容 / 还是旧的</td>
+        <td>手机缓存了旧页面</td>
+        <td>让玩家用无痕窗口打开，或清一下浏览器缓存再扫码。</td>
+      </tr>
+      <tr>
+        <td>二维码扫不出来</td>
+        <td>打印太小 / 反光 / 手机离太远</td>
+        <td>后台「玩家扫码处」点「打印二维码」重新打大一点；也可以让玩家手动输入网址。</td>
+      </tr>
+      <tr>
+        <td>后台的进度数字不动</td>
+        <td>页面与服务器的实时连接断了</td>
+        <td>它会自动重连；实在不动就刷新页面（不影响已抽的签）。</td>
+      </tr>
+      <tr>
+        <td>玩家说「抽到一半卡住了」</td>
+        <td>网络慢，正在抽</td>
+        <td>等 2 秒。若提示错误，让玩家再点一次「启 签」；同一台手机在同一轮只会有一张卡。</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ============ 8 未做完 ============ -->
+  <section class="pad">
+    <h2><span class="no">8</span>两个「暂时别指望」的地方</h2>
+    <p class="lead">这几处目前的真实情况，知道了就不会在现场白折腾。</p>
+    <ol>
+      <li><b>停用的组局不会从列表里消失。</b>「停用」这功能本身是管用的——玩家再输这个码会被直接拒绝（提示「该组局已经停用」），「开新轮」也按不动；但它<b>只是把那一行变暗，仍然留在「进行中的组局」列表里</b>。所以测试局想眼不见为净，目前只能忍着。</li>
+      <li><b>没有「删除组局」。</b>测试局只能停用，删不掉。另外管理端<b>只有一个管理员账号</b>，多人同时操作没有权限区分，现场建议只让一个人碰后台。</li>
+    </ol>
+    <div class="tip">
+      这两条都能改：让列表<b>默认把已停用的收起来</b>（加一个「显示已停用」开关），或者<b>加一个删除组局</b>的功能（会连同该局的历史记录一起删）。说一声就行。
+    </div>
+  </section>
+
+  <footer>
+    囍签 · 现场操作图解　|　内容按当前实际界面整理：玩家端 6 屏 + 3 个异常态，管理端 6 个区域。<br />
+    建议打印一份放在控台旁边；界面文案以后若有改动，这份图解可以随时重新生成。
+  </footer>
+</div>
+</body>
+</html>
