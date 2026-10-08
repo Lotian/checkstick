@@ -110,10 +110,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 .story-copy h1.story-title--logo { margin: 9px 0 5px; }
 .story-copy h1.story-title--logo img { display: block; width: min(240px, 62vw); height: auto; }
 .story-copy h2 { margin: 0 0 18px; color: var(--gold); font: 500 14px/1.6 var(--font-display); letter-spacing: .15em; }
-.story-intro { margin: 0; color: #ded0bb; font-size: 12.5px; line-height: 1.95; overflow-wrap: anywhere; text-align: justify; }
+/* 故事简介、入场须知、奖励文本都是后台的多行输入框，换行要如实呈现：
+   pre-line 保留换行、同时把连续空格折叠掉并正常自动换行（pre 会把整段撑出卡片）。 */
+.story-intro { margin: 0; color: #ded0bb; font-size: 12.5px; line-height: 1.95; overflow-wrap: anywhere; text-align: justify; white-space: pre-line; }
 .story-warning { margin-top: 17px; padding: 12px 13px; border-left: 2px solid #a83a3b; background: rgb(106 21 26 / 18%); }
 .story-warning strong { color: #d6a65f; font: 600 11px var(--font-display); letter-spacing: .18em; }
-.story-warning p { margin: 6px 0 0; color: #bba890; font-size: 10.5px; line-height: 1.75; overflow-wrap: anywhere; }
+.story-warning p { margin: 6px 0 0; color: #bba890; font-size: 10.5px; line-height: 1.75; overflow-wrap: anywhere; white-space: pre-line; }
 .story-footnote, .join-help { margin: 11px 0 0; color: #7e6c5c; font-size: 9px; letter-spacing: .12em; text-align: center; }
 
 .cinema-button {
@@ -216,7 +218,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 .task-steps p { margin: 0; color: #e6d8c2; font-size: 12px; line-height: 1.7; }
 .no-task { margin: 15px 0 8px; color: #c79a5c; font: 15px var(--font-display); letter-spacing: .3em; text-align: center; }
 .reward-section { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; margin-top: 13px; padding-top: 11px; border-top: 1px solid rgb(233 180 100 / 24%); }
-.reward-section p { margin: 4px 0 0; color: #d9c9b2; font-size: 11px; line-height: 1.6; }
+.reward-section p { margin: 4px 0 0; color: #d9c9b2; font-size: 11px; line-height: 1.6; white-space: pre-line; }
 .reward-seal { display: grid; width: 34px; height: 34px; border: 2px solid var(--gold); border-radius: 50%; color: var(--gold); font: 18px var(--font-display); place-items: center; transform: rotate(-8deg); }
 .card-note { margin: 13px 0 0; color: #8e7865; font-size: 9px; letter-spacing: .25em; text-align: center; }
 .reveal-card { animation: card-reveal 700ms cubic-bezier(.16,.8,.26,1) both; }
