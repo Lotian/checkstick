@@ -506,7 +506,7 @@ onBeforeUnmount(closeEvents)
     <el-dialog v-model="createVisible" title="新建组局" width="460px">
       <el-form label-position="top" @submit.prevent="createGroup">
         <el-form-item label="现场名称">
-          <el-input v-model="newGroupName" maxlength="80" placeholder="例如：一号厅 · 红轿局" @keyup.enter="createGroup" />
+          <el-input v-model="newGroupName" maxlength="80" placeholder="例如：x月x日 第x局" @keyup.enter="createGroup" />
         </el-form-item>
         <el-form-item label="本局人数区间">
           <div class="range-row">
