@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { api, clearCsrfToken, errorMessage, setCsrfToken } from './client'
+import { api, clearCsrfToken, errorMessage, isNetworkError, setCsrfToken } from './client'
 
 function captureRequestHeader(name = 'X-XSRF-TOKEN') {
   const seen: { value: string | undefined } = { value: undefined }
@@ -75,13 +75,22 @@ describe('管理端 CSRF 请求头', () => {
 })
 
 describe('管理端网络中断自动重放', () => {
-  it('保存身份内容（PUT）遇到瞬时断连时重放一次，不打扰现场', async () => {
+  it('保存身份内容（PUT）遇到瞬时断连时重放，现场无感知', async () => {
     const state = adapterWithNetworkFailures(1)
 
     const response = await api.put('/admin/role-templates', { templates: [] })
 
     expect(response.status).toBe(200)
     expect(state.calls).toBe(2)
+  })
+
+  it('连续两次断连（例如后端刚重启完）仍然能保存成功', async () => {
+    const state = adapterWithNetworkFailures(2)
+
+    const response = await api.put('/admin/role-templates', { templates: [] })
+
+    expect(response.status).toBe(200)
+    expect(state.calls).toBe(3)
   })
 
   it('查询类请求（GET）同样可以重放', async () => {
@@ -99,14 +108,30 @@ describe('管理端网络中断自动重放', () => {
     expect(state.calls).toBe(1)
   })
 
-  it('重放只做一次，仍然失败就如实报错', async () => {
+  it('最多尝试 3 次，仍然失败就如实报错', async () => {
     const state = adapterWithNetworkFailures(Number.POSITIVE_INFINITY)
 
     const error = await api
       .put('/admin/role-templates', { templates: [] })
       .catch((caught: unknown) => caught)
 
-    expect(state.calls).toBe(2)
+    expect(state.calls).toBe(3)
     expect(errorMessage(error)).toBe('连接不到现场服务器，请确认后端已启动')
+  })
+})
+
+describe('isNetworkError（区分连不上与后端报错）', () => {
+  it('完全没拿到响应算连接层失败', () => {
+    expect(isNetworkError(new axios.AxiosError('Network Error', 'ERR_NETWORK'))).toBe(true)
+  })
+
+  it('后端返回了错误就不算，调用方应展示后端的说明', () => {
+    const response = { data: {}, status: 403, statusText: 'Forbidden', headers: {}, config: {} }
+    expect(isNetworkError(new axios.AxiosError('Forbidden', 'ERR_BAD_RESPONSE', undefined, undefined, response as never))).toBe(false)
+  })
+
+  it('非 axios 异常也不算', () => {
+    expect(isNetworkError(new Error('boom'))).toBe(false)
+    expect(isNetworkError(undefined)).toBe(false)
   })
 })

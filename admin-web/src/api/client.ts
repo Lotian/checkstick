@@ -23,8 +23,14 @@ const SAFE_METHODS = new Set(['get', 'head', 'options'])
  */
 const REPLAYABLE_METHODS = new Set(['get', 'head', 'options', 'put', 'patch', 'delete'])
 
-/** 重试前的等待时间：足够跨过后端重启的那一两秒，又不至于让人以为卡住了。 */
-const NETWORK_RETRY_DELAY_MS = 600
+/**
+ * 网络层完全拿不到响应时的重放策略。
+ *
+ * 现场 WiFi 抖动是一瞬间的事，但后端重启要好几秒，所以给足三次尝试。
+ * 间隔逐步拉长：第一次几乎立刻补，第二次等一会儿，再失败才如实报错。
+ */
+const NETWORK_MAX_ATTEMPTS = 3
+const NETWORK_RETRY_DELAYS_MS = [500, 1500]
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -42,7 +48,7 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-type RetriableConfig = { __csrfRetried?: boolean; __networkRetried?: boolean }
+type RetriableConfig = { __csrfRetried?: boolean; __networkAttempt?: number }
 
 api.interceptors.response.use(
   (response) => response,
@@ -54,12 +60,15 @@ api.interceptors.response.use(
     const config = error.config as (NonNullable<typeof error.config> & RetriableConfig) | undefined
     const method = config?.method?.toLowerCase() ?? 'get'
 
-    // ① 完全没有响应：现场 WiFi 抖动，或后端正好在重启的那几秒。
-    //    这种情况重放一次通常就好了，比直接弹「连接不到现场服务器」有用得多。
-    if (config && !error.response && REPLAYABLE_METHODS.has(method) && !config.__networkRetried) {
-      config.__networkRetried = true
-      await delay(NETWORK_RETRY_DELAY_MS)
-      return await api.request(config)
+    // ① 完全没有响应：现场 WiFi 抖动，或后端正好在重启。
+    //    这类失败重放通常就好了，比弹一句「连接不到现场服务器」有用得多。
+    if (config && !error.response && REPLAYABLE_METHODS.has(method)) {
+      const attempt = config.__networkAttempt ?? 1
+      if (attempt < NETWORK_MAX_ATTEMPTS) {
+        config.__networkAttempt = attempt + 1
+        await delay(NETWORK_RETRY_DELAYS_MS[attempt - 1] ?? 1500)
+        return await api.request(config)
+      }
     }
 
     // ② 写请求 403：多半是 CSRF 令牌过期，刷新令牌后重放一次。
@@ -97,4 +106,14 @@ export function errorMessage(error: unknown): string {
     return '连接不到现场服务器，请确认后端已启动'
   }
   return '发生了意外错误，请稍后重试'
+}
+
+/**
+ * 是否为「连响应都没拿到」的连接层失败：现场断网，或后端没起来 / 正在重启。
+ *
+ * 与「后端返回了错误」区分开很有用：后者说明请求到了服务器，前者才需要提示重试，
+ * 也才需要告诉值班人员「页面上的内容还在」。
+ */
+export function isNetworkError(error: unknown): boolean {
+  return axios.isAxiosError(error) && !error.response
 }

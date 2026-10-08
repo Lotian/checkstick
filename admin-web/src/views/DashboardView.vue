@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api, errorMessage } from '@/api/client'
+import { api, errorMessage, isNetworkError } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import StatCard from '@/components/StatCard.vue'
 import QrPanel from '@/components/QrPanel.vue'
@@ -276,7 +276,12 @@ async function saveTemplates() {
     templateVisible.value = false
     ElMessage.success('身份任务和奖励已经保存')
   } catch (error) {
-    ElMessage.error(errorMessage(error))
+    // 保存失败时窗口不关闭，编辑内容都还在原处，所以直接告诉值班人员可以再点一次。
+    ElMessage.error(
+      isNetworkError(error)
+        ? '没能连上服务器，内容仍留在窗口里，可直接再点一次「保存全部内容」'
+        : errorMessage(error),
+    )
   }
 }
 
