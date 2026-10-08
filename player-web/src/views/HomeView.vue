@@ -6,6 +6,7 @@ import { api } from '@/api/client'
 import { useDrawStore } from '@/stores/draw'
 import type { StoryIntro } from '@/types'
 import { isCompleteGroupCode, normalizeGroupCode } from '@/utils/code'
+import { isBrandTitle } from '@/utils/text'
 
 const DEFAULT_STORY: StoryIntro = {
   title: '纸嫁衣',
@@ -21,6 +22,17 @@ const stage = ref<'intro' | 'game'>('intro')
 // 既可能误入别的局，也会让人以为那是系统给的默认值。
 const codeInput = ref('')
 const story = reactive<StoryIntro>({ ...DEFAULT_STORY })
+
+/**
+ * 首屏大标题。
+ *
+ * 「纸嫁衣」三个字是毛笔书法，字体渲染不出这个味道，所以直接用官方文字 logo 图片。
+ * 但标题是后台可改的文案（管理端「玩家端故事简介 → 标题」），因此只在标题正好是
+ * 本次活动名时才用图片，改成别的名字会自动退回普通文字，避免图文不符。
+ */
+const TITLE_LOGO_SRC = '/assets/logo-zhijiayi.png'
+const useTitleLogo = computed(() => isBrandTitle(story.title))
+
 const showResult = computed(() => Boolean(store.result) && !store.drawing)
 const codeDigits = computed(() => Array.from({ length: 4 }, (_, index) => codeInput.value[index] ?? ''))
 
@@ -68,7 +80,10 @@ onMounted(loadStory)
         </header>
         <div class="story-copy">
           <p class="story-kicker">今 夜 · 入 戏</p>
-          <h1>{{ story.title }}</h1>
+          <h1 v-if="useTitleLogo" class="story-title--logo">
+            <img :src="TITLE_LOGO_SRC" :alt="story.title" />
+          </h1>
+          <h1 v-else>{{ story.title }}</h1>
           <h2>{{ story.subtitle }}</h2>
           <p class="story-intro">{{ story.introText }}</p>
           <div v-if="story.warningText" class="story-warning">
