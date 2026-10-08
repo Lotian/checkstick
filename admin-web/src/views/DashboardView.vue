@@ -556,7 +556,7 @@ onBeforeUnmount(closeEvents)
                 :placeholder="template.roleType === 'VILLAGER' ? '默认无任务，也可按活动需要填写' : '第一步\n第二步'"
               />
             </el-form-item>
-            <el-form-item label="奖励文本">
+            <el-form-item :label="template.roleType === 'VILLAGER' ? '奖励文本（村民无赏礼，身份卡上不显示）' : '奖励文本'">
               <el-input v-model="template.rewardText" type="textarea" :rows="2" />
             </el-form-item>
           </el-form>

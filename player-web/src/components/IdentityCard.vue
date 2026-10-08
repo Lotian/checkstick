@@ -6,6 +6,11 @@ import { taskSteps } from '@/utils/text'
 const props = defineProps<{ result: DrawResult }>()
 const steps = computed(() => taskSteps(props.result.taskText))
 const roleClass = computed(() => `role-card--${props.result.roleType.toLowerCase()}`)
+/**
+ * 村民只是旁观喜事的看客，没有赏礼，身份卡上不该出现「线下赏礼」栏目。
+ * 新郎/新娘保留该栏目，文案缺失时用一句兜底提示，不让玩家以为没奖励。
+ */
+const hasReward = computed(() => props.result.roleType !== 'VILLAGER')
 const figureSource = computed(() => {
   if (props.result.roleType === 'GROOM') return '/assets/papercut-groom.png'
   if (props.result.roleType === 'BRIDE') return '/assets/papercut-bride.png'
@@ -39,7 +44,7 @@ const figureSource = computed(() => {
       <p v-else class="no-task">暂 · 无 · 任 · 务</p>
     </section>
 
-    <section class="reward-section">
+    <section v-if="hasReward" class="reward-section">
       <span class="reward-seal">赏</span>
       <div>
         <h2>线下赏礼</h2>
