@@ -5,6 +5,7 @@ target/
 *.war
 .mvn/wrapper/maven-wrapper.jar
 
+
 # Node
 node_modules/
 dist/
@@ -28,3 +29,11 @@ data/
 
 # 微信/临时文件
 *.tmp
+
+# 部署产物
+deploy/out/
+*.tar.gz
+*.zip
+
+# 如果是构建输出
+build/
