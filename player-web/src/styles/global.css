@@ -56,7 +56,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
     linear-gradient(180deg, rgb(8 4 5 / 78%) 0%, rgb(8 4 5 / 37%) 27%, rgb(8 4 5 / 78%) 69%, rgb(8 4 5 / 97%) 100%),
     radial-gradient(circle at 50% 45%, transparent, rgb(0 0 0 / 24%) 72%);
 }
-.cinema-screen[data-state='intro'] { --scene: url('/assets/scene-street.jpg'); }
+/* 首屏采用缩小后的 WebP，保留原图构图；文件摘要用于避开旧资源的长期缓存。 */
+.cinema-screen[data-state='intro'] { --scene: url('/assets/scene-street-mobile-66d20707.webp'); }
 .cinema-screen[data-state='join'] { --scene: url('/assets/scene-sedan.jpg'); }
 .cinema-screen[data-state='waiting'] { --scene: url('/assets/shot-4.png'); }
 .cinema-screen[data-state='drawing'] { --scene: url('/assets/shot-35.jpg'); }
